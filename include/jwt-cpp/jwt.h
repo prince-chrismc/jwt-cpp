@@ -76,9 +76,9 @@ namespace jwt {
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
 			// TODO: Cannot find the exact version this change happended
 #if OPENSSL_VERSION_NUMBER <= 0x1000114fL
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), (int)certstr.size()), BIO_free_all);
 #else
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), certstr.size()), BIO_free_all);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), (int)certstr.size()), BIO_free_all);
 #endif
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
 
@@ -167,7 +167,7 @@ namespace jwt {
 			std::string sign(const std::string& data) const {
 				std::string res;
 				res.resize(EVP_MAX_MD_SIZE);
-				unsigned int len = res.size();
+				unsigned int len = (unsigned int)res.size();
 				if (HMAC(md(), secret.data(), (int)secret.size(), (const unsigned char*)data.data(), (int)data.size(), (unsigned char*)res.data(), &len) == nullptr)
 					throw signature_generation_exception();
 				res.resize(len);
@@ -430,9 +430,9 @@ namespace jwt {
 				if(static_cast<uint8_t>(raw[0]) >= 0x80) {
 					std::string str(1, 0x00);
 					str += raw;
-					return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)str.data(), str.size(), nullptr), BN_free);
+					return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)str.data(), (int)str.size(), nullptr), BN_free);
 				}
-				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
+				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), (int)raw.size(), nullptr), BN_free);
 			}
 
 			/**
