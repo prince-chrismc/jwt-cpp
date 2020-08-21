@@ -28,16 +28,20 @@ std::string make_rapid_token() {
         this->CopyFrom(other, this->GetAllocator());
         return *this;
       };
+
+      size_t count(std::string str){
+        return std::count_if(this->Begin(), this->End(),
+         [str](value* val){ return str == val->GetString(); });
+      }
     };
 
-
-    struct object_type : rapidjson::Document{
-       object_type(): rapidjson::Document(rapidjson::kObjectType){}
+    struct object_type : value{
+       using value::value;
        using mapped_type = value;
        using key_type = std::string;
     };
-    struct array_type : rapidjson::Document{
-       array_type(): rapidjson::Document(rapidjson::kArrayType){}
+    struct array_type : value{
+       using value::value;
        using value_type = value;
     };
 		using string_type = std::string;
