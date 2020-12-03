@@ -4,7 +4,7 @@
 
 #include <dlfcn.h>
 // TODO: Figure out why the tests fail on older openssl versions
-#if !OPENSSL110  // It fails on < 1.1 but no idea why.
+#ifndef OPENSSL110  // It fails on < 1.1 but no idea why.
 // LibreSSL has different return codes but was already outside of the effective scope
 
 /**
