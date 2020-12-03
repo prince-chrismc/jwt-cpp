@@ -1,0 +1,31 @@
+name: LibreSSL CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@latest
+    - name: install gtest
+      uses: ./.github/actions/install-gtest
+
+    - name: install libressl
+      uses: ./.github/actions/install-libressl
+
+    - name: configure
+      run: cmake . -DJWT_BUILD_TESTS=ON
+        
+    - name: make
+      run: make
+
+    - name: test
+      run: ./tests/jwt-cpp-test
