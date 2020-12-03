@@ -4,7 +4,8 @@
 
 #include <dlfcn.h>
 // TODO: Figure out why the tests fail on older openssl versions
-#if OPENSSL10  // It fails on < 1.1 but no idea why.
+#if !OPENSSL110  // It fails on < 1.1 but no idea why.
+// LibreSSL has different return codes but was already outside of the effective scope
 
 /**
  * ============ Beginning of black magic ===============
