@@ -9,6 +9,7 @@ runs:
   using: composite
   steps:
   - run: |
+      wget https://raw.githubusercontent.com/libressl-portable/portable/${{ inputs.version }}/FindLibreSSL.cmake -P cmake/
       cd /tmp
       wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${{ inputs.version }}.tar.gz
       tar -zvxf /tmp/libressl-${{ inputs.version }}.tar.gz
