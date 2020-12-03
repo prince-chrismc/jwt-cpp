@@ -14,9 +14,9 @@ runs:
     shell: bash
   - run: cd /tmp/libressl-${{ inputs.version }}
     shell: bash
-  - run: cmake -B/tmp/libressl-${{ inputs.version }} -S/tmp/libressl-${{ inputs.version }} -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF
+  - run: cmake -B/tmp/libressl-${{ inputs.version }}/build -S/tmp/libressl-${{ inputs.version }} -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF
     shell: bash
-  - run: cmake --build /tmp/libressl-${{ inputs.version }}
+  - run: make -C /tmp/libressl-${{ inputs.version }}/build
     shell: bash
-  - run: sudo cmake --install /tmp/libressl-${{ inputs.version }}
+  - run: sudo make -C /tmp/libressl-${{ inputs.version }}/build install
     shell: bash
