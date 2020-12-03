@@ -49,7 +49,14 @@ if(JWT_DISABLE_PICOJSON)
 endif()
 target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
 target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
+endif()
 
 if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
