@@ -22,7 +22,7 @@ jobs:
       uses: ./.github/actions/install-libressl
 
     - name: configure
-      run: cmake . -DJWT_BUILD_TESTS=ON
+      run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
         
     - name: make
       run: make

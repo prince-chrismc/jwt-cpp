@@ -10,9 +10,23 @@ option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
+set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL)
+set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
+set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-find_package(OpenSSL 1.0.2 REQUIRED)
+if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
+    message(FATAL_ERROR "JWT_SSL_LIBRARY must be one of ${JWT_SSL_LIBRARY_OPTIONS}")
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
+  find_package(OpenSSL 1.0.2 REQUIRED)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+  find_package(LibreSSL 3.0.0 REQUIRED)
+endif()
 
 if(JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
