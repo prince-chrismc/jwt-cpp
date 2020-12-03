@@ -4,7 +4,7 @@
 
 #include <dlfcn.h>
 // TODO: Figure out why the tests fail on older openssl versions
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L  // It fails on < 1.1 but no idea why.
+#if OPENSSL10  // It fails on < 1.1 but no idea why.
 
 /**
  * ============ Beginning of black magic ===============

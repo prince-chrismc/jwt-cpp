@@ -56,7 +56,7 @@ endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
-  target_compile_definitions(jwt-cpp INTERFACE OPENSSL10)
+  target_compile_definitions(jwt-cpp INTERFACE OPENSSL10 OPENSSL110)
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
