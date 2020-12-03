@@ -758,6 +758,7 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
     });
 }
 
+#ifndef OPENSSL110
 TEST(OpenSSLErrorTest, EdDSAKey) {
     std::vector<multitest_entry> mapping = {
         // load_private_key_from_string
@@ -842,6 +843,6 @@ TEST(OpenSSLErrorTest, Ed25519VerifyErrorCode) {
         alg.verify("testdata", signature, ec);
     });
 }
-
+#endif
 #endif
 #endif
