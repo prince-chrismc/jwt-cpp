@@ -8,11 +8,11 @@ inputs:
 runs:
   using: composite
   steps:
-  - run: wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${{ inputs.libcxx }}.tar.gz
+  - run: wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${{ inputs.version }}.tar.gz
     shell: bash
-  - run: tar zxf libressl-${{ inputs.libcxx }}.tar.gz
+  - run: tar zxf libressl-${{ inputs.version }}.tar.gz
     shell: bash
-  - run: cd libressl-${{ inputs.libcxx }}
+  - run: cd libressl-${{ inputs.version }}
     shell: bash
   - run: cmake . -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF
     shell: bash
