@@ -15,5 +15,5 @@ runs:
       tar -zvxf /tmp/libressl-${{ inputs.version }}.tar.gz
       cd libressl-${{ inputs.version }}
       ./configure
-      sudo make install
+      sudo make -j $(nproc) install
     shell: bash

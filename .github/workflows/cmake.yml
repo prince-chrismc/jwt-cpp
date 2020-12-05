@@ -75,3 +75,25 @@ jobs:
         cd tests/cmake
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="base64-is-disabled"
         cmake --build .
+
+  with-libressl:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@latest
+    - name: install libressl
+      uses: ./.github/actions/install-libressl
+      
+    - name: setup
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DJWT_SSL_LIBRARY:STRING="LibreSSL" -DJWT_BUILD_EXAMPLES=OFF
+        sudo make install
+
+    - name: test
+      run: |
+        cd tests/cmake
+        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="libressl-is-used"
+        cmake --build .
