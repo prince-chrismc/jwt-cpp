@@ -94,6 +94,7 @@ jobs:
 
     - name: test
       run: |
+        cp cmake/FindLibreSSL.cmake tests/cmake/
         cd tests/cmake
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="libressl-is-used"
         cmake --build .
