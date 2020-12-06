@@ -94,7 +94,6 @@ jobs:
 
     - name: test
       run: |
-        sudo cp cmake/FindLibreSSL.cmake /usr/local/cmake
         cd tests/cmake
-        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="libressl-is-used"
+        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
         cmake --build .
