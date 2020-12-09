@@ -32,8 +32,8 @@ These are the version which are tested:
 | [1.1.1][1.1.1] |                 |
 
 [1.0.2]: https://travis-ci.com/github/Thalhammer/jwt-cpp
-[3.2.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.2/shields.json
-[3.3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.0/shields.json
+[3.2.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.2.2/shields.json
+[3.3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.3.0/shields.json
 [1.1.1]: https://github.com/Thalhammer/jwt-cpp/actions?query=workflow%3A%22Coverage+CI%22
 
 ## Overview
