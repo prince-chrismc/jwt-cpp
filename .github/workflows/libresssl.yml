@@ -21,7 +21,7 @@ jobs:
     - name: install libressl
       uses: ./.github/actions/install-libressl
       with:
-      - version: ${{ matrix.libressl }}
+        version: ${{ matrix.libressl }}
 
     - name: configure
       run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
