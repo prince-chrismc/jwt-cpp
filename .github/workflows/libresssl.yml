@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        libressl: ["3.3.0"]
+        libressl: ["3.3.0", "3.2.2"]
     steps:
     - uses: actions/checkout@v2
     - name: install cmake
@@ -35,11 +35,13 @@ jobs:
     - name: badge success
       if: ${{ success() }}
       run: |
+        mkdir -p badges/libressl/${{ matrix.libressl }}
         echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Passing", "color": "brightgreen" }' > badges/libressl/${{ matrix.libressl }}/shields.json
 
     - name: badge failure
       if: ${{ !success() }}
       run: |
+        mkdir -p badges/libressl/${{ matrix.libressl }}
         echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Failing", "color": "red" }' > badges/libressl/${{ matrix.libressl }}/shields.json
 
     - name: badge publish

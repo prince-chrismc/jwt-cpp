@@ -9,6 +9,10 @@
 
 A header only library for creating and validating [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) in C++11. For a great introduction, [read this](https://jwt.io/introduction/)
 
+## SSL Compatability
+
+![LibreSSL](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.3.0/shields.json)
+
 ## Signature algorithms
 
 jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
