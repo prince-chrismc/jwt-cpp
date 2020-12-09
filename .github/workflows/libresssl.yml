@@ -23,7 +23,7 @@ jobs:
 
     - name: configure
       run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
-        
+
     - name: make
       run: make
 
