@@ -16,3 +16,4 @@ script:
   - cmake . -DJWT_BUILD_TESTS=ON
   - make
   - ./tests/jwt-cpp-test
+  - ./example/rsa-verify
