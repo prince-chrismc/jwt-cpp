@@ -1798,8 +1798,8 @@ namespace jwt {
 		};
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(
-			std::declval<const object_type>().count(std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
+			std::declval<const string_type>()))>;
 
 		template<typename object_type, typename value_type, typename string_type>
 		using is_subcription_operator_signature =
@@ -1816,8 +1816,8 @@ namespace jwt {
 			static constexpr auto value =
 				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				is_detected<has_key_type, object_type>::value &&
-				std::is_same<typename object_type::key_type, string_type>::value &&
+				// is_detected<has_key_type, object_type>::value &&
+				// std::is_same<typename object_type::key_type, string_type>::value &&
 				supports_begin<object_type>::value && supports_end<object_type>::value &&
 				is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
@@ -1831,6 +1831,12 @@ namespace jwt {
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
 			static constexpr auto value = std::is_same<typename array_type::value_type, value_type>::value;
+		};
+
+		template<typename value_type, typename string_type>
+		struct is_valid_json_string {
+			static constexpr auto value = true;
+			// TODO: check for `substr` and `operator+`
 		};
 
 		template<typename value_type, typename string_type, typename object_type, typename array_type>
@@ -1866,8 +1872,8 @@ namespace jwt {
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
-		static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
-					  "string_type must be a std::string.");
+		// static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
+		// 			  "string_type must be a std::string.");
 
 		static_assert(
 			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
@@ -2292,7 +2298,8 @@ namespace jwt {
 		 */
 		JWT_CLAIM_EXPLICIT decoded_jwt(const typename json_traits::string_type& token)
 			: decoded_jwt(token, [](const typename json_traits::string_type& token) {
-				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+				  return base::decode<alphabet::base64url>(
+					  base::pad<alphabet::base64url>(json_traits::to_standard_string(token)));
 			  }) {}
 #endif
 		/**
@@ -2312,9 +2319,9 @@ namespace jwt {
 			if (hdr_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
 			auto payload_end = token.find('.', hdr_end + 1);
 			if (payload_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
-			header_base64 = token.substr(0, hdr_end);
-			payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
-			signature_base64 = token.substr(payload_end + 1);
+			header_base64 = json_traits::do_substr(token, 0, hdr_end);
+			payload_base64 = json_traits::do_substr(token, hdr_end + 1, payload_end - hdr_end - 1);
+			signature_base64 = json_traits::do_substr(token, payload_end + 1);
 
 			header = decode(header_base64);
 			payload = decode(payload_base64);
@@ -2573,14 +2580,15 @@ namespace jwt {
 			typename json_traits::object_type obj_header = header_claims;
 			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
 
-			const auto header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			const auto payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			const auto token = header + "." + payload;
+			const std::string header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			const std::string payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			const std::string token_body = header + "." + payload;
 
-			auto signature = algo.sign(token, ec);
+			const std::string signature = algo.sign(token_body, ec);
 			if (ec) return {};
 
-			return token + "." + encode(signature);
+			const auto token = token_body + "." + encode(signature);
+			return typename json_traits::string_type(token.data(), token.length());
 		}
 #ifndef JWT_DISABLE_BASE64
 		/**
@@ -2596,8 +2604,9 @@ namespace jwt {
 		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
 			return sign(
 				algo,
-				[](const typename json_traits::string_type& data) {
-					return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+				[](const std::string& data) -> std::string {
+					return base::trim<alphabet::base64url>(
+						base::encode<alphabet::base64url>(data));
 				},
 				ec);
 		}
@@ -2758,14 +2767,15 @@ namespace jwt {
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			ec.clear();
-			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
+			typename json_traits::string_type data = jwt.get_header_base64();
+			data.append(".").append(jwt.get_payload_base64());
 			const typename json_traits::string_type sig = jwt.get_signature();
-			const std::string algo = jwt.get_algorithm();
+			const std::string algo = json_traits::to_standard_string(jwt.get_algorithm());
 			if (algs.count(algo) == 0) {
 				ec = error::token_verification_error::wrong_algorithm;
 				return;
 			}
-			algs.at(algo)->verify(data, sig, ec);
+			algs.at(algo)->verify(json_traits::to_standard_string(data), json_traits::to_standard_string(sig), ec);
 			if (ec) return;
 
 			auto assert_claim_eq = [](const decoded_jwt<json_traits>& jwt, const typename json_traits::string_type& key,
