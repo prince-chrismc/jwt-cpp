@@ -45,5 +45,15 @@ int main() {
 		.with_claim("object", from_raw_json)
 		.verify(decoded);
 
+
+const auto buggy = jwt::decode<traits>("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
+
+	const
+
+
+
+
+
+
 	return 0;
 }
