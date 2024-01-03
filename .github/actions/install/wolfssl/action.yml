@@ -4,7 +4,7 @@ inputs:
   version:
     description: The desired stable wolfSSL version to install
     required: false
-    default: "v4.8.1-stable"
+    default: "v5.6.6-stable"
 runs:
   using: composite
   steps:
