@@ -23,6 +23,7 @@ These are the version which are currently being tested:
 | ![1.1.1w][o1.1.1] | ![3.8.2][l3.8] | ![5.6.6][w5.6] |
 | ![3.2.0][o3.2]    |                |                |
 
+
 > [!NOTE]
 > A complete list of versions tested in the past can be found [here](https://github.com/Thalhammer/jwt-cpp/tree/badges).
 
@@ -36,6 +37,7 @@ These are the version which are currently being tested:
 [w5.4]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.6.6/shields.json
 [w5.5]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.5.4/shields.json
 [w5.6]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.4.0/shields.json
+
 
 ## Notes
 
