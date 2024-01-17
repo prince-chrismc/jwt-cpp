@@ -15,14 +15,14 @@ runs:
         tar -zxf /tmp/${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
       shell: bash
-    - if: runner.os == Windows
+    - if: runner.os == 'Windows'
       shell: cmd
       run: |
         %comspec% /k "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         perl Configure VC-WIN64A
         nmake
         nmake install
-    - if: runner.os == Linux
+    - if: runner.os == 'Linux'
       shell: bash
       run: |
         ./config --prefix=/tmp --libdir=lib
