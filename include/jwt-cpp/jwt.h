@@ -1404,11 +1404,12 @@ namespace jwt {
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
 
-				const int secret_size = BN_num_bytes(secret.get());
-				std::vector<unsigned char> buffer(size, '\0');
-				BN_bn2bin(secret.get(), buffer.data());
+				const BIGNUM* secret_bn = secret.get();
+				std::vector<unsigned char> buffer(BN_num_bytes(secret_bn), '\0');
+				const auto buffer_size = BN_bn2bin(secret_bn, buffer.data());
+				buffer.resize(buffer_size);
 
-				if (HMAC(md(), secret.data(), secret_size,
+				if (HMAC(md(), buffer.data(), buffer_size,
 						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
