@@ -9,15 +9,15 @@ runs:
   using: composite
   steps:
     - uses: ilammy/setup-nasm@v1
-    - run: |
-        cd /tmp
-        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
-        cd openssl-${{ inputs.version }}
-      shell: bash
+    - if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Invoke-WebRequest -OutFile ${{ inputs.version }}.tar.gz -Uri https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
     - if: runner.os == 'Windows'
       shell: cmd
       run: |
+        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+        cd openssl-${{ inputs.version }}
         %comspec% /k "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         perl Configure VC-WIN64A
         nmake
@@ -25,6 +25,10 @@ runs:
     - if: runner.os == 'Linux'
       shell: bash
       run: |
+        cd /tmp
+        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+        cd openssl-${{ inputs.version }}
         ./config --prefix=/tmp --libdir=lib
         make -j $(nproc)
         sudo make -j $(nproc) install_sw
