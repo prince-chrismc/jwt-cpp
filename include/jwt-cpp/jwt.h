@@ -1385,12 +1385,13 @@ namespace jwt {
 			/**
 			 * Construct new hmac algorithm
 			 *
+			 * \deprecated Using a character is not recommeded and hardened applications should use BIGNUM 
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
+				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
 			 *
@@ -1402,7 +1403,12 @@ namespace jwt {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
+
+				const int secret_size = BN_num_bytes(secret.get());
+				std::vector<unsigned char*> buffer(size, '\0');
+				BN_bn2bin(secret.get(), buffer.data());
+
+				if (HMAC(md(), secret.data(), secret_size,
 						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
@@ -1442,7 +1448,7 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			const std::string secret;
+			const std::unique_ptr<BIGNUM, decltype(&BN_free)> secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
