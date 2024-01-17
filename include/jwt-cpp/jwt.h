@@ -1405,7 +1405,7 @@ namespace jwt {
 				auto len = static_cast<unsigned int>(res.size());
 
 				const int secret_size = BN_num_bytes(secret.get());
-				std::vector<unsigned char*> buffer(size, '\0');
+				std::vector<unsigned char> buffer(size, '\0');
 				BN_bn2bin(secret.get(), buffer.data());
 
 				if (HMAC(md(), secret.data(), secret_size,
