@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - if: matrix.os != 'macos-latest'
-        use: ./.github/actions/install/openssl
+        uses: ./.github/actions/install/openssl
 
       - if: matrix.os == 'macos-latest'
         run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
