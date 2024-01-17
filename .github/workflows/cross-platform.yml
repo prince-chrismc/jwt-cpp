@@ -13,15 +13,15 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
+      - uses: actions/checkout@v3
+      
       - if: matrix.os != 'macos-latest'
         uses: ./.github/actions/install/openssl
 
       - if: matrix.os == 'macos-latest'
         run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
 
-      - uses: actions/checkout@v3
       - run: cmake -E make_directory ${{ github.workspace }}/build
-
       - name: configure
         shell: bash # access regardless of the host operating system
         working-directory: ${{ github.workspace }}/build
