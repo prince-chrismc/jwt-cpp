@@ -14,11 +14,12 @@ runs:
       run: |
         Invoke-WebRequest -OutFile ${{ inputs.version }}.tar.gz -Uri https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
     - if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+    - if: runner.os == 'Windows'
       shell: cmd
       run: |
         tar -zxf ${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        %comspec% /k "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         perl Configure VC-WIN64A
         nmake
         nmake install
