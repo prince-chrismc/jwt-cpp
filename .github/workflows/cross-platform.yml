@@ -18,6 +18,8 @@ jobs:
       - if: matrix.os != 'macos-latest'
         uses: ./.github/actions/install/openssl
 
+      - if: matrix.os == 'windows-latest'
+        run: rmdir C:\Program Files\OpenSSL
       - if: matrix.os == 'macos-latest'
         run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
 
