@@ -32,6 +32,7 @@ runs:
     - if: runner.os == 'Windows'
       shell: bash
       run: |
+        cd openssl-${{ inputs.version }}
         nmake install_sw
         echo "OPENSSL_ROOT_DIR=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
         echo "OpenSSL_ROOT=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
@@ -46,6 +47,7 @@ runs:
     - if: runner.os == 'Linux'
       shell: bash
       run: |
+        cd openssl-${{ inputs.version }}
         sudo make -j $(nproc) install_sw
         echo "OPENSSL_ROOT_DIR=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
         echo "OpenSSL_ROOT=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
