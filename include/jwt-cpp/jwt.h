@@ -1392,6 +1392,18 @@ namespace jwt {
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
 				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
+			hmacsha(const hmacsha& other) :
+			    secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {
+			}
+			hmacsha(hmacsha&& other) :
+			    secret(BN_copy(other.secret)), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
+			}
+			~hmacsha(){
+				BN_free(secret)
+			}
+			hmacsha& operator=(const hmacsha& other) = default;
+			hmacsha& operator=(hmacsha&& other) = default;
+			
 			/**
 			 * Sign jwt data
 			 *
@@ -1404,9 +1416,8 @@ namespace jwt {
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
 
-				const BIGNUM* secret_bn = secret.get();
-				std::vector<unsigned char> buffer(BN_num_bytes(secret_bn), '\0');
-				const auto buffer_size = BN_bn2bin(secret_bn, buffer.data());
+				std::vector<unsigned char> buffer(BN_num_bytes(secret), '\0');
+				const auto buffer_size = BN_bn2bin(secret, buffer.data());
 				buffer.resize(buffer_size);
 
 				if (HMAC(md(), buffer.data(), buffer_size,
@@ -1449,7 +1460,7 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			const std::unique_ptr<BIGNUM, decltype(&BN_free)> secret;
+			const BIGNUM* secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
