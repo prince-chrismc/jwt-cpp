@@ -27,7 +27,7 @@ runs:
       run: |
         tar -zxf ${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
+        perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl no-tests
         nmake
     - if: runner.os == 'Windows'
       shell: bash
@@ -42,7 +42,7 @@ runs:
         wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
         tar -zxf ./${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        ./config --prefix=${{ github.workspace }}/openssl --libdir=lib
+        ./config --prefix=${{ github.workspace }}/openssl --libdir=lib no-tests
         make -j $(nproc)
     - if: runner.os == 'Linux'
       shell: bash
