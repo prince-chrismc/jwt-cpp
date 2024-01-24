@@ -1392,15 +1392,11 @@ namespace jwt {
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
 				: secret(helper::raw2bn(key).release()), md(md), alg_name(std::move(name)) {}
-			hmacsha(const hmacsha& other)
-			    : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
-			hmacsha(hmacsha&& other)
-			    : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
-					if(BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
+			hmacsha(const hmacsha& other) : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
+			hmacsha(hmacsha&& other) : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
+				if(BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
 			}
-			~hmacsha(){
-				BN_free(secret);
-			}
+			~hmacsha(){ BN_free(secret); }
 			hmacsha& operator=(const hmacsha& other) = delete;
 			hmacsha& operator=(hmacsha&& other) = delete;
 			
@@ -1420,8 +1416,8 @@ namespace jwt {
 				const auto buffer_size = BN_bn2bin(secret, buffer.data());
 				buffer.resize(buffer_size);
 
-				if (HMAC(md(), buffer.data(), buffer_size,
-						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
+				if (HMAC(md(), buffer.data(), buffer_size, reinterpret_cast<const unsigned char*>(data.data()),
+						 static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
 					ec = error::signature_generation_error::hmac_failed;
