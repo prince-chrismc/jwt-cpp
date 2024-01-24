@@ -1391,18 +1391,18 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
-			hmacsha(const hmacsha& other) :
-			    secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {
-			}
-			hmacsha(hmacsha&& other) :
-			    secret(BN_copy(other.secret)), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
+				: secret(helper::raw2bn(key).release()), md(md), alg_name(std::move(name)) {}
+			hmacsha(const hmacsha& other)
+			    : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
+			hmacsha(hmacsha&& other)
+			    : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
+					if(BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
 			}
 			~hmacsha(){
-				BN_free(secret)
+				BN_free(secret);
 			}
-			hmacsha& operator=(const hmacsha& other) = default;
-			hmacsha& operator=(hmacsha&& other) = default;
+			hmacsha& operator=(const hmacsha& other) = delete;
+			hmacsha& operator=(hmacsha&& other) = delete;
 			
 			/**
 			 * Sign jwt data
@@ -1460,7 +1460,7 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			const BIGNUM* secret;
+			BIGNUM* secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
