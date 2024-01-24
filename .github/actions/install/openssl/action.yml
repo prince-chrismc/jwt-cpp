@@ -22,7 +22,7 @@ runs:
         cd openssl-${{ inputs.version }}
         perl Configure VC-WIN64A
         nmake
-        nmake install
+        nmake install_sw
     - if: runner.os == 'Linux'
       shell: bash
       run: |
