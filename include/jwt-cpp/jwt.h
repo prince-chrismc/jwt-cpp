@@ -1394,9 +1394,9 @@ namespace jwt {
 				: secret(helper::raw2bn(key).release()), md(md), alg_name(std::move(name)) {}
 			hmacsha(const hmacsha& other) : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
 			hmacsha(hmacsha&& other) : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
-				if(BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
+				if (BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
 			}
-			~hmacsha(){ BN_free(secret); }
+			~hmacsha() { BN_free(secret); }
 			hmacsha& operator=(const hmacsha& other) = delete;
 			hmacsha& operator=(hmacsha&& other) = delete;
 			
