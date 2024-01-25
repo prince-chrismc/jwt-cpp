@@ -33,9 +33,10 @@ runs:
       shell: bash
       run: |
         cd openssl-${{ inputs.version }}
-        nmake install_sw
+        nmake install
         echo "OPENSSL_ROOT_DIR=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
         echo "OpenSSL_ROOT=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
+
     - if: runner.os == 'Linux' && steps.cache-openssl.outputs.cache-hit != 'true'
       shell: bash
       run: |
