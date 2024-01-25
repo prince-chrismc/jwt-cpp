@@ -1147,7 +1147,6 @@ namespace jwt {
 			~hmacsha() { BN_free(secret); }
 			hmacsha& operator=(const hmacsha& other) = delete;
 			hmacsha& operator=(hmacsha&& other) = delete;
-			
 			/**
 			 * Sign jwt data
 			 * 
