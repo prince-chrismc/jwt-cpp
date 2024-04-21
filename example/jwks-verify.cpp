@@ -9,7 +9,7 @@
 #include <openssl/rand.h>
 
 int main() {
-	std::string raw_jwks =
+	const std::string raw_jwks =
 		R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
 		"alg": "RS256",
@@ -33,7 +33,7 @@ int main() {
 	}
 ]})";
 
-	std::string pem_priv_key = R"(-----BEGIN PRIVATE KEY-----
+	const std::string pem_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDl0gyL9KCpoXsJ
 lvBaBUsJTAgvFhbgsBjpxT6m2xv0fgtGDBwgaiPvuMnClTU/kYkKb8c1GTkMedKp
 9YcM57HWTk9yqGTy6QBnMMxbAJYNwWQ4Dbr4qKSC6C3KzYws/Bqyv8OC9NAOyqJb
@@ -89,19 +89,19 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	// https://stackoverflow.com/a/30138974
 	unsigned char nonce[24];
 	RAND_bytes(nonce, sizeof(nonce));
-	std::string jti =
+	const std::string jti =
 		jwt::base::encode<jwt::alphabet::base64url>(std::string{reinterpret_cast<const char*>(nonce), sizeof(nonce)});
 
-	std::string token = jwt::create()
-							.set_issuer("auth0")
-							.set_type("JWT")
-							.set_id(jti)
-							.set_key_id("internal-gateway-jwt.api.sc.net")
-							.set_subject("jwt-cpp.example.localhost")
-							.set_issued_at(std::chrono::system_clock::now())
-							.set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
-							.set_payload_claim("sample", jwt::claim(std::string{"test"}))
-							.sign(jwt::algorithm::rs256("", pem_priv_key, "", ""));
+	const std::string token = jwt::create()
+								  .set_issuer("auth0")
+								  .set_type("JWT")
+								  .set_id(jti)
+								  .set_key_id("internal-gateway-jwt.api.sc.net")
+								  .set_subject("jwt-cpp.example.localhost")
+								  .set_issued_at(std::chrono::system_clock::now())
+								  .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+								  .set_payload_claim("sample", jwt::claim(std::string{"test"}))
+								  .sign(jwt::algorithm::rs256("", pem_priv_key, "", ""));
 
 	auto decoded_jwt = jwt::decode(token);
 	auto jwks = jwt::parse_jwks(raw_jwks);
@@ -111,7 +111,7 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	auto x5c = jwk.get_x5c_key_value();
 
 	if (!x5c.empty() && !issuer.empty()) {
-		std::cout << "Verifying with 'x5c' key" << std::endl;
+		std::cout << "Verifying with 'x5c' key" << '\n';
 		auto verifier =
 			jwt::verify()
 				.allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
@@ -123,7 +123,7 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	}
 	// else if the optional 'x5c' was not present
 	{
-		std::cout << "Verifying with RSA components" << std::endl;
+		std::cout << "Verifying with RSA components" << '\n';
 		const auto modulus = jwk.get_jwk_claim("n").as_string();
 		const auto exponent = jwk.get_jwk_claim("e").as_string();
 		auto verifier = jwt::verify()

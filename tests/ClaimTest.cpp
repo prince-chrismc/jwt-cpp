@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(ClaimTest, AudienceAsString) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode(token);
 
@@ -32,7 +32,7 @@ TEST(ClaimTest, SetAudienceAsString) {
 }
 
 TEST(ClaimTest, AudienceAsSet) {
-	std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
+	const std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
 	auto decoded = jwt::decode(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
@@ -89,17 +89,17 @@ TEST(ClaimTest, SetAlgorithm) {
 }
 
 TEST(ClaimTest, AsInt) {
-	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
+	const jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_integer(), 10);
 }
 
 TEST(ClaimTest, AsDate) {
-	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
+	const jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_date(), std::chrono::system_clock::from_time_t(10));
 }
 
 TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
-	jwt::traits::kazuho_picojson::value_type val;
+	const jwt::traits::kazuho_picojson::value_type val;
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_array(val), std::bad_cast);
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_boolean(val), std::bad_cast);
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_integer(val), std::bad_cast);
@@ -110,13 +110,13 @@ TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsBool) {
-	jwt::traits::kazuho_picojson::value_type val(true);
+	const jwt::traits::kazuho_picojson::value_type val(true);
 	ASSERT_EQ(jwt::traits::kazuho_picojson::as_boolean(val), true);
 	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::boolean);
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsDouble) {
-	jwt::traits::kazuho_picojson::value_type val(10.0);
+	const jwt::traits::kazuho_picojson::value_type val(10.0);
 	ASSERT_EQ(jwt::traits::kazuho_picojson::as_number(val), (int)10);
 	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::number);
 }

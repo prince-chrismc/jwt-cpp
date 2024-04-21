@@ -20,3 +20,5 @@ AllowShortBlocksOnASingleLine: Always
 
 FixNamespaceComments: true
 ReflowComments: false
+
+QualifierAlignment: Left

@@ -90,7 +90,8 @@ namespace jwt {
 		} // namespace helper
 
 		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
-			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
+			const auto* itr =
+				std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char ch) { return ch == symbol; });
 			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
 
 			return static_cast<uint32_t>(std::distance(alphabet.cbegin(), itr));
@@ -109,7 +110,7 @@ namespace jwt {
 				padding() = default;
 				padding(size_t count, size_t length) : count(count), length(length) {}
 
-				padding operator+(const padding& p) { return padding(count + p.count, length + p.length); }
+				padding operator+(const padding& pad) const { return {count + pad.count, length + pad.length}; }
 
 				friend bool operator==(const padding& lhs, const padding& rhs) {
 					return lhs.count == rhs.count && lhs.length == rhs.length;
@@ -131,17 +132,17 @@ namespace jwt {
 
 			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
 									  const std::string& fill) {
-				size_t size = bin.size();
+				const size_t size = bin.size();
 				std::string res;
 
 				// clear incomplete bytes
 				size_t fast_size = size - size % 3;
 				for (size_t i = 0; i < fast_size;) {
-					uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
+					const uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
+					const uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
+					const uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
 
-					uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+					const uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
 					res += alphabet[(triple >> 3 * 6) & 0x3F];
 					res += alphabet[(triple >> 2 * 6) & 0x3F];
@@ -151,13 +152,13 @@ namespace jwt {
 
 				if (fast_size == size) return res;
 
-				size_t mod = size % 3;
+				const size_t mod = size % 3;
 
-				uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
-				uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
-				uint32_t octet_c = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				const uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				const uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				const uint32_t octet_c = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
 
-				uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+				const uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
 				switch (mod) {
 				case 1:
@@ -186,20 +187,20 @@ namespace jwt {
 				const size_t size = base.size() - pad.length;
 				if ((size + pad.count) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
 
-				size_t out_size = size / 4 * 3;
+				const size_t out_size = size / 4 * 3;
 				std::string res;
 				res.reserve(out_size);
 
 				auto get_sextet = [&](size_t offset) { return alphabet::index(alphabet, base[offset]); };
 
-				size_t fast_size = size - size % 4;
+				const size_t fast_size = size - size % 4;
 				for (size_t i = 0; i < fast_size;) {
-					uint32_t sextet_a = get_sextet(i++);
-					uint32_t sextet_b = get_sextet(i++);
-					uint32_t sextet_c = get_sextet(i++);
-					uint32_t sextet_d = get_sextet(i++);
+					const uint32_t sextet_a = get_sextet(i++);
+					const uint32_t sextet_b = get_sextet(i++);
+					const uint32_t sextet_c = get_sextet(i++);
+					const uint32_t sextet_d = get_sextet(i++);
 
-					uint32_t triple =
+					const uint32_t triple =
 						(sextet_a << 3 * 6) + (sextet_b << 2 * 6) + (sextet_c << 1 * 6) + (sextet_d << 0 * 6);
 
 					res += static_cast<char>((triple >> 2 * 8) & 0xFFU);

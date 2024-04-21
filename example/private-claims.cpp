@@ -12,7 +12,7 @@ int main() {
 	std::istringstream iss{R"##({"api":{"array":[1,2,3],"null":null}})##"};
 	iss >> from_raw_json;
 
-	jwt::claim::set_t list{"once", "twice"};
+	const jwt::claim::set_t list{"once", "twice"};
 	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
@@ -34,7 +34,7 @@ int main() {
 	const auto decoded = jwt::decode(token);
 
 	const auto api_array = decoded.get_payload_claim("object").to_json().get("api").get("array");
-	std::cout << "api array = " << api_array << std::endl;
+	std::cout << "api array = " << api_array << '\n';
 
 	/* [verify exact claim] */
 	jwt::verify()

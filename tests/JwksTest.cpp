@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(JwksTest, OneKeyParse) {
-	std::string public_key = R"({
+	const std::string public_key = R"({
     "alg": "RS256",
     "kty": "RSA",
     "use": "sig",
@@ -29,7 +29,7 @@ TEST(JwksTest, OneKeyParse) {
 }
 
 TEST(JwksTest, MultiKeysParse) {
-	std::string public_key = R"({
+	const std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
 			"use": "sig",
@@ -67,7 +67,7 @@ TEST(JwksTest, MultiKeysParse) {
 }
 
 TEST(JwksTest, Missingx5c) {
-	std::string public_key = R"({
+	const std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
 			"use": "sig",

@@ -15,7 +15,7 @@ TEST(NlohmannTest, BasicClaims) {
 }
 
 TEST(NlohmannTest, AudienceAsString) {
-	jwt::traits::nlohmann_json::string_type token =
+	const jwt::traits::nlohmann_json::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode<jwt::traits::nlohmann_json>(token);
 
@@ -60,7 +60,7 @@ TEST(NlohmannTest, SetObject) {
 }
 
 TEST(NlohmannTest, VerifyTokenHS256) {
-	jwt::traits::nlohmann_json::string_type token =
+	const jwt::traits::nlohmann_json::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
@@ -115,11 +115,11 @@ TEST(NlohmannTest, VerifyTokenExpired) {
 }
 
 TEST(NlohmannTest, VerifyArray) {
-	jwt::traits::nlohmann_json::string_type token = "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.";
+	const jwt::traits::nlohmann_json::string_type token = "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.";
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
 
 	std::vector<int64_t> vect = {100, 20, 10};
-	jwt::basic_claim<jwt::traits::nlohmann_json> array_claim(vect.begin(), vect.end());
+	const jwt::basic_claim<jwt::traits::nlohmann_json> array_claim(vect.begin(), vect.end());
 	const auto verify = jwt::verify<jwt::traits::nlohmann_json>()
 							.allow_algorithm(jwt::algorithm::none{})
 							.with_claim("test", array_claim);
@@ -127,7 +127,7 @@ TEST(NlohmannTest, VerifyArray) {
 }
 
 TEST(NlohmannTest, VerifyObject) {
-	jwt::traits::nlohmann_json::string_type token =
+	const jwt::traits::nlohmann_json::string_type token =
 		"eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA";
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
 

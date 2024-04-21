@@ -27,7 +27,7 @@ inline namespace test_keys {
 } // namespace test_keys
 
 TEST(TokenTest, DecodeToken) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 	auto decoded = jwt::decode(token);
 
@@ -203,7 +203,7 @@ TEST(TokenTest, CreateTokenEd448) {
 #endif
 
 TEST(TokenTest, VerifyTokenWrongAlgorithm) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
@@ -218,7 +218,7 @@ TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 
 TEST(TokenTest, VerifyTokenNoneFail) {
 	// None algorithm should not have a signature
-	std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE1OTUyNjc1MTZ9.cmFuZG9tc2ln";
+	const std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE1OTUyNjc1MTZ9.cmFuZG9tc2ln";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::none{});
 
@@ -236,7 +236,7 @@ TEST(TokenTest, VerifyTokenRS256FailNoKey) {
 }
 
 TEST(TokenTest, VerifyTokenRS256) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
@@ -251,7 +251,7 @@ TEST(TokenTest, VerifyTokenRS256) {
 }
 
 TEST(TokenTest, VerifyTokenRS256PublicOnly) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
@@ -265,7 +265,7 @@ TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 }
 
 TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
@@ -279,7 +279,7 @@ TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
 }
 
 TEST(TokenTest, VerifyTokenRS256Fail) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
@@ -294,7 +294,7 @@ TEST(TokenTest, VerifyTokenRS256Fail) {
 }
 
 TEST(TokenTest, VerifyTokenRS512) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
@@ -309,7 +309,7 @@ TEST(TokenTest, VerifyTokenRS512) {
 }
 
 TEST(TokenTest, VerifyTokenRS512PublicOnly) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
@@ -322,7 +322,7 @@ TEST(TokenTest, VerifyTokenRS512PublicOnly) {
 }
 
 TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
@@ -336,7 +336,7 @@ TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
 }
 
 TEST(TokenTest, VerifyTokenRS512Fail) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
@@ -350,7 +350,7 @@ TEST(TokenTest, VerifyTokenRS512Fail) {
 }
 
 TEST(TokenTest, VerifyTokenHS256) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
@@ -360,7 +360,7 @@ TEST(TokenTest, VerifyTokenHS256) {
 }
 
 TEST(TokenTest, VerifyTokenHS256Fail) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"wrongsecret"}).with_issuer("auth0");
@@ -370,7 +370,7 @@ TEST(TokenTest, VerifyTokenHS256Fail) {
 }
 
 TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkA";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
@@ -530,7 +530,7 @@ TEST(TokenTest, VerifyTokenES521Fail) {
 }
 
 TEST(TokenTest, VerifyTokenPS256) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
@@ -545,7 +545,7 @@ TEST(TokenTest, VerifyTokenPS256) {
 }
 
 TEST(TokenTest, VerifyTokenPS256PublicOnly) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
@@ -559,7 +559,7 @@ TEST(TokenTest, VerifyTokenPS256PublicOnly) {
 }
 
 TEST(TokenTest, VerifyTokenPS256Fail) {
-	std::string token =
+	const std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
