@@ -37,10 +37,6 @@
 #include <utility>
 #include <vector>
 
-#if __cplusplus > 201103L
-#include <codecvt>
-#endif
-
 #if __cplusplus >= 201402L
 #ifdef __has_include
 #if __has_include(<experimental/type_traits>)
@@ -3801,6 +3797,11 @@ namespace jwt {
 		using jwks_vector_t = std::vector<jwks_t>;
 		using iterator = typename jwks_vector_t::iterator;
 		using const_iterator = typename jwks_vector_t::const_iterator;
+
+		/**
+		 * Default constructor producing an empty object without any keys
+		 */
+		jwks() = default;
 
 		/**
 		 * Parses a string buffer to extract the JWKS.
