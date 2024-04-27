@@ -72,6 +72,25 @@ jobs:
           cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
+  default-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
   min-req:
     runs-on: ubuntu-20.04
     steps:
@@ -196,7 +215,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/libressl
+      - uses: ././install/libressl
 
       - name: setup
         run: |
