@@ -13,7 +13,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: openssl-${{ inputs.version }}
-        key: ${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-openssl-${{ inputs.version }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-openssl-${{ inputs.version }}
 
     - uses: ilammy/setup-nasm@v1
     - if: runner.os == 'Windows'
