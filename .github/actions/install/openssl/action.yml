@@ -27,7 +27,13 @@ runs:
       run: |
         tar -zxf ${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl no-tests
+
+        rem Check version using string comparison
+        if "%openssl_version%" GEQ "3.0.0" (
+          perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl no-tests
+        ) else (
+          perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
+        )
         nmake
     - if: runner.os == 'Windows'
       shell: cmd
@@ -43,7 +49,13 @@ runs:
         wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
         tar -zxf ./${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        ./config --prefix=${{ github.workspace }}/openssl --libdir=lib
+
+        # Check version using major number comparison
+        if [[ "${{ inputs.version }}" -ge "3.0.0" ]]; then
+          ./config --prefix=${{ github.workspace }}/openssl --libdir=lib no-tests
+        else
+          ./config --prefix=${{ github.workspace }}/openssl --libdir=lib
+        fi
         make -j $(nproc)
     - if: runner.os == 'Linux'
       shell: bash
