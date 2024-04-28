@@ -215,7 +215,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
-      - uses: ././install/libressl
+      - uses: ./.github/actions/install/libressl
 
       - name: setup
         run: |
