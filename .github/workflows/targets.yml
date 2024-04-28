@@ -25,7 +25,7 @@ jobs:
           wget https://mirrorservice.org/sites/sourceware.org/pub/gcc/releases/gcc-4.8.5/gcc-4.8.5.tar.bz2
           tar -xjf gcc-4.8.5.tar.bz2
           cd gcc-4.8.5
-          ./configure --target=${{ runner.arch }} --prefix ${{ github.workspace }}/gcc
+          ./configure --prefix ${{ github.workspace }}/gcc
           make -j $(nproc)
           sduo make install
 
