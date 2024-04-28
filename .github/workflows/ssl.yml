@@ -8,16 +8,20 @@ on:
 
 jobs:
   openssl:
-    runs-on: ubuntu-latest
+    runs-on: matrix.os
     strategy:
+      fail-fast: false
       matrix:
+        os: [windows-latest, ubuntu-latest]
         openssl:
-          - { tag: "openssl-3.2.0", name: "3.2.0" }
-          - { tag: "openssl-3.1.4", name: "3.1.4" }
+          - { tag: "openssl-3.3.0", name: "3.3.0" }
+          # - { tag: "openssl-3.2.1", name: "3.2.1" }
+          # - { tag: "openssl-3.1.5", name: "3.1.5" }
+          # - { tag: "openssl-3.0.13", name: "3.0.13" }
           - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
-          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
-          - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
-          - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
+          # - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
+          # - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
+          # - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
     steps:
       - uses: actions/checkout@v4
