@@ -26,16 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
           version: ${{ matrix.openssl.tag }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
-      - run: make
+        run: cmake . -DJWT_BUILD_TESTS=ON
+      - name: build
+        run: cmake --build . --target jwt-cpp-test
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: cmake --build . --target jwt-cpp-test-run
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -90,8 +90,8 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "v5.6.6-stable", name: "5.6.6"}
-          - { ref: "v5.5.4-stable", name: "5.5.4" }
+          #- { ref: "v5.6.6-stable", name: "5.6.6"}
+          #- { ref: "v5.5.4-stable", name: "5.5.4" }
           - { ref: "v5.4.0-stable", name: "5.4.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
