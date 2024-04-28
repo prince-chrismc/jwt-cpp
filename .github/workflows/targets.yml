@@ -28,6 +28,8 @@ jobs:
 
           wget https://trac.macports.org/raw-attachment/ticket/53076/patch-gcc46-texi.diff
           git apply patch-gcc46-texi.diff
+          wget https://raw.githubusercontent.com/ChrisMacGregor/esp-open-sdk/master/1001-fix-reload1-compile-error.patch
+          git apply 1001-fix-reload1-compile-error.patch
           
           ./configure --prefix ${{ github.workspace }}/gcc --enable-languages=c,c++ --disable-libada --disable-libssp
           make -j $(nproc)
