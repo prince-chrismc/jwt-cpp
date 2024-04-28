@@ -36,7 +36,9 @@ runs:
           perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
         )
 
-        if "%openssl_version:~0,2%"=="1.0" (
+        set openssl_major_minor="%openssl_version:~0,3%"
+        echo OpenSSL %openssl_major_minor%
+        if "%openssl_major_minor%" == "1.0" (
           nmake -f ms\ntdll.mak
         ) else (
           nmake
