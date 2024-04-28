@@ -30,7 +30,7 @@ runs:
         perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl no-tests
         nmake
     - if: runner.os == 'Windows'
-      shell: bash
+      shell: cmd
       run: |
         cd openssl-${{ inputs.version }}
         nmake install
