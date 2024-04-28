@@ -30,7 +30,7 @@ jobs:
           git apply patch-gcc46-texi.diff
           wget https://raw.githubusercontent.com/ChrisMacGregor/esp-open-sdk/master/1001-fix-reload1-compile-error.patch
           git apply 1001-fix-reload1-compile-error.patch
-          wget -O ec1cc0.patch https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=ec1cc0263f156f70693a62cf17b254a0029f4852
+          wget -O ec1cc0.patch https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff_plain;h=ec1cc0263f156f70693a62cf17b254a0029f4852
           git apply ec1cc0.patch
           
           ./configure --prefix ${{ github.workspace }}/gcc --enable-languages=c,c++ --disable-libada --disable-libssp
