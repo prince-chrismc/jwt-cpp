@@ -25,7 +25,11 @@ jobs:
           wget https://mirrorservice.org/sites/sourceware.org/pub/gcc/releases/gcc-4.8.5/gcc-4.8.5.tar.bz2
           tar -xjf gcc-4.8.5.tar.bz2
           cd gcc-4.8.5
-          ./configure --prefix ${{ github.workspace }}/gcc
+
+          wget https://trac.macports.org/raw-attachment/ticket/53076/patch-gcc46-texi.diff
+          git apply patch-gcc46-texi.diff
+          
+          ./configure --prefix ${{ github.workspace }}/gcc --enable-languages=c,c++ --disable-libada --disable-libssp
           make -j $(nproc)
           sduo make install
 
