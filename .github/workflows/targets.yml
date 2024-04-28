@@ -17,16 +17,19 @@ jobs:
   gcc-4-8:
     name: GCC 4.8
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:bionic-20230530 # 18.04
-    env:
-      CC: /usr/bin/gcc-4.8
-      CXX: /usr/bin/g++-4.8
     steps:
       - run: |
           apt-get update
-          apt-get install -y g++-4.8 wget make libssl-dev
-      - uses: actions/checkout@v3 # Can not be upgrade as v4 needs NodeJS 20 doesn't exist next to gcc-4.8 
+          apt-get install -y build-essential autoconf automake libtool
+          
+          wget https://mirrorservice.org/sites/sourceware.org/pub/gcc/releases/gcc-4.8.5/gcc-4.8.5.tar.bz2
+          tar -xjf gcc-4.8.5.tar.bz2
+          cd gcc-4.8.5
+          ./configure --target=${{ runner.arch }} --prefix ${{ github.workspace }}/gcc
+          make -j $(nproc)
+          make install
+
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/install/cmake
         with:
           version: "3.26.3"
