@@ -43,7 +43,7 @@ runs:
         wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
         tar -zxf ./${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        ./config --prefix=${{ github.workspace }}/openssl --libdir=lib no-tests
+        ./config --prefix=${{ github.workspace }}/openssl --libdir=lib
         make -j $(nproc)
     - if: runner.os == 'Linux'
       shell: bash
