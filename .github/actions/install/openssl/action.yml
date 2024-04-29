@@ -27,22 +27,8 @@ runs:
       run: |
         tar -zxf ${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-
-        set openssl_version="${{ inputs.version }}"
-        rem Check version using string comparison
-        if "%openssl_version%" GEQ "3.0.0" (
-          perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl no-tests
-        ) else (
-          perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
-        )
-
-        set openssl_major_minor="%openssl_version:~0,3%"
-        echo OpenSSL %openssl_major_minor%
-        if "%openssl_major_minor%" == "1.0" (
-          nmake -f ms\ntdll.mak
-        ) else (
-          nmake
-        )
+        perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
+        nmake
     - if: runner.os == 'Windows'
       shell: cmd
       run: |
