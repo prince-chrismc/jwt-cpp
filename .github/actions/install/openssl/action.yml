@@ -4,19 +4,19 @@ inputs:
   version:
     description: The desired OpenSSL version to install
     required: false
-    default: "openssl-3.2.0"
+    default: "openssl-3.3.0"
 runs:
   using: composite
   steps:
     - name: Cache CMake
       id: cache-openssl
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: openssl-${{ inputs.version }}
         key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-openssl-${{ inputs.version }}
 
     - uses: ilammy/setup-nasm@v1
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'Windows' && steps.cache-openssl.outputs.cache-hit != 'true'
       shell: powershell
       run: |
         Invoke-WebRequest -OutFile ${{ inputs.version }}.tar.gz -Uri https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
