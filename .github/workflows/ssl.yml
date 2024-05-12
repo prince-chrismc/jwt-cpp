@@ -27,14 +27,14 @@ jobs:
         # script to build them but it's just a pain to support them, see the failed attempt:
         # https://github.com/prince-chrismc/jwt-cpp/pull/35/commits/e4948d2e1b7ec03896f80669fab6f9a2edf7ea63
           - os: windows-latest
-            tag: "OpenSSL_1_1_0i"
-            name: "1.1.0i"
+            openssl.tag: "OpenSSL_1_1_0i"
+            openssl.name: "1.1.0i"
           - os: windows-latest
-            tag: "OpenSSL_1_0_2u"
-            name: "1.0.2u"
+            openssl.tag: "OpenSSL_1_0_2u"
+            openssl.name: "1.0.2u"
           - os: windows-latest
-            tag: "OpenSSL_1_0_1u"
-            name: "1.0.1u"
+            openssl.tag: "OpenSSL_1_0_1u"
+            openssl.name: "1.0.1u"
     name: OpenSSL ${{ matrix.openssl.name }} - ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
