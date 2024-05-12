@@ -58,7 +58,7 @@ jobs:
       fail-fast: false
       matrix:
         openssl:
-          - { tag: "openssl-3.2.0", name: "3.2.0" }
+          - { tag: "openssl-3.3.0", name: "3.3.0" }
           - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
     steps:
       - uses: actions/checkout@v4
