@@ -14,12 +14,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: configure
         run: cmake --preset examples
 
       - name: build
-        run: cmake --build --preset examples
+        run: MSBUILD_VERBOSITY=Diagnostic cmake --build --preset examples
 
       - name: test
         run: |
