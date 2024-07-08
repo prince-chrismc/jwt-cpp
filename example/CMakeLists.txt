@@ -34,5 +34,8 @@ add_custom_target(jwks-verify-run COMMAND jwks-verify)
 add_executable(es256k es256k.cpp)
 target_link_libraries(es256k jwt-cpp::jwt-cpp)
 
+add_executable(hs512 hs512.cpp)
+target_link_libraries(hs512 jwt-cpp::jwt-cpp)
+
 add_executable(partial-claim-verifier partial-claim-verifier.cpp)
 target_link_libraries(partial-claim-verifier jwt-cpp::jwt-cpp nlohmann_json::nlohmann_json)
