@@ -72,6 +72,8 @@ jobs:
           cmake --build --preset ci-asan --target rsa-create-run
           cmake --build --preset ci-asan --target rsa-verify-run
           cmake --build --preset ci-asan --target jwks-verify-run
+          cmake --build --preset ci-asan --target es256k-run
+          cmake --build --preset ci-asan --target hs512-run
           cmake --build --preset ci-asan --target jwt-cpp-test-run
 
   ubsan:
@@ -92,4 +94,6 @@ jobs:
           cmake --build --preset ci-ubsan --target rsa-create-run
           cmake --build --preset ci-ubsan --target rsa-verify-run
           cmake --build --preset ci-ubsan --target jwks-verify-run
+          cmake --build --preset ci-ubsan --target es256k-run
+          cmake --build --preset ci-ubsan --target hs512-run
           cmake --build --preset ci-ubsan --target jwt-cpp-test-run

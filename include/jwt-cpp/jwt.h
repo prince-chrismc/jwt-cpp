@@ -1132,13 +1132,31 @@ namespace jwt {
 		struct hmacsha {
 			/**
 			 * Construct new hmac algorithm
-			 * 
+			 *
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
+				: secret(helper::raw2bn(key).release()), md(md), alg_name(std::move(name)) {}
+			/**
+			 * Construct new hmac algorithm
+			 *
+			 * \param key Key to use for HMAC
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 */
+			hmacsha(const BIGNUM* key, const EVP_MD* (*md)(), std::string name)
+				: secret(BN_dup(key)), md(md), alg_name(std::move(name)) {}
+			hmacsha(const hmacsha& other) : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
+			hmacsha(hmacsha&& other) : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
+				if (BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
+				other.secret = nullptr;
+			}
+			~hmacsha() { BN_free(secret); }
+			hmacsha& operator=(const hmacsha& other)= delete;
+			hmacsha& operator=(hmacsha&& other) = delete;
 			/**
 			 * Sign jwt data
 			 * 
@@ -1150,8 +1168,13 @@ namespace jwt {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
-						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
+
+				std::vector<unsigned char> buffer(BN_num_bytes(secret), '\0');
+				const auto buffer_size = BN_bn2bin(secret, buffer.data());
+				buffer.resize(buffer_size);
+
+				if (HMAC(md(), buffer.data(), buffer_size, reinterpret_cast<const unsigned char*>(data.data()),
+						 static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
 					ec = error::signature_generation_error::hmac_failed;
@@ -1190,7 +1213,7 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			const std::string secret;
+			BIGNUM* secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -1787,9 +1810,15 @@ namespace jwt {
 		struct hs256 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
 			 * \param key HMAC signing key
 			 */
 			explicit hs256(std::string key) : hmacsha(std::move(key), EVP_sha256, "HS256") {}
+			/**
+			 * Construct new instance of algorithm
+			 * \param key HMAC signing key
+			 */
+			explicit hs256(const BIGNUM* key) : hmacsha(key, EVP_sha256, "HS256") {}
 		};
 		/**
 		 * HS384 algorithm
@@ -1797,9 +1826,15 @@ namespace jwt {
 		struct hs384 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
 			 * \param key HMAC signing key
 			 */
 			explicit hs384(std::string key) : hmacsha(std::move(key), EVP_sha384, "HS384") {}
+			/**
+			 * Construct new instance of algorithm
+			 * \param key HMAC signing key
+			 */
+			explicit hs384(const BIGNUM* key) : hmacsha(key, EVP_sha384, "HS384") {}
 		};
 		/**
 		 * HS512 algorithm
@@ -1807,9 +1842,19 @@ namespace jwt {
 		struct hs512 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
 			 * \param key HMAC signing key
 			 */
 			explicit hs512(std::string key) : hmacsha(std::move(key), EVP_sha512, "HS512") {}
+			/**
+			 * Construct new instance of algorithm
+			 * 
+			 * This can be used to sign and verify tokens.
+		 	 * \snippet{trimleft} hs512.cpp use HMAC algo with BIGNUM
+			 *
+			 * \param key HMAC signing key
+			 */
+			explicit hs512(const BIGNUM* key) : hmacsha(key, EVP_sha512, "HS512") {}
 		};
 		/**
 		 * RS256 algorithm.
