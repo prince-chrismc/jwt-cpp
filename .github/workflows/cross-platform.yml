@@ -18,7 +18,7 @@ jobs:
         run: cmake --preset examples
 
       - name: build
-        run: MSBUILD_VERBOSITY=Diagnostic cmake --build --preset examples
+        run: cmake --build --preset examples
 
       - name: test
         run: |
