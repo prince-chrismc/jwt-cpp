@@ -69,7 +69,7 @@ jobs:
           cd build_unit
           cmake .. -DJWT_BUILD_TESTS=ON
           cmake --build . --target jwt-cpp-test
-          ./jwt-cpp-test
+          ./tests/jwt-cpp-test
 
       - name: badge success
         if: github.event_name == 'push' && success()
