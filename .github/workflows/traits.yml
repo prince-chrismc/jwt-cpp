@@ -56,12 +56,20 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
-      - name: test
+      - name: test example
         working-directory: example/traits
         run: |
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build . --target ${{ matrix.target.name }}
           ./${{ matrix.target.name }}
+
+      - name: test unit
+        run: |
+          mkdir build_unit
+          cd build_unit
+          cmake .. -DJWT_BUILD_TESTS=ON
+          cmake --build . --target jwt-cpp-test
+          ./jwt-cpp-test
 
       - name: badge success
         if: github.event_name == 'push' && success()
