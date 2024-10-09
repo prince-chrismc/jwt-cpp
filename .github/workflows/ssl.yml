@@ -66,7 +66,7 @@ jobs:
         run: cmake --preset unit-tests -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --rerun-failed --output-on-failure
 
   libressl:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --rerun-failed --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -101,9 +101,9 @@ jobs:
       fail-fast: false
       matrix:
         wolfssl:
+          - { ref: "v5.7.0-stable", name: "5.7.0"}
           - { ref: "v5.6.6-stable", name: "5.6.6"}
           - { ref: "v5.5.4-stable", name: "5.5.4" }
-          - { ref: "v5.7.0-stable", name: "5.7.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v4
@@ -117,7 +117,7 @@ jobs:
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=wolfSSL
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --rerun-failed --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
