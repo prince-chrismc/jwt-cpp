@@ -69,11 +69,14 @@ elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatibility API
 endif()
 
-if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
+if(0)
   find_package(picojson 1.3.0 REQUIRED)
 endif()
 
-if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
+find_path(PICOJSON_INCLUDE_DIR "picojson/picojson.h" REQUIRED)
+target_include_directories(jwt-cpp INTERFACE "${PICOJSON_INCLUDE_DIR}")
+
+if(0)
   if(JWT_EXTERNAL_NLOHMANN_JSON)
     message(STATUS "jwt-cpp: using find_package for nlohmann-json required for tests")
     find_package(nlohmann_json CONFIG REQUIRED)
