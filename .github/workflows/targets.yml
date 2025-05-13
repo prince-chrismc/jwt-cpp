@@ -18,16 +18,28 @@ jobs:
     if: false # There's no existing image with node20 and gcc4.8 https://github.com/actions/checkout/issues/1809
     name: GCC 4.8
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:bionic-20230530 # 18.04
-    env:
-      CC: /usr/bin/gcc-4.8
-      CXX: /usr/bin/g++-4.8
     steps:
       - run: |
-          apt-get update
-          apt-get install -y g++-4.8 wget make libssl-dev
-      - uses: actions/checkout@v3 # Can not be upgrade as v4 needs NodeJS 20 doesn't exist next to gcc-4.8 
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool libgmp-dev libmpfr-dev libmpc-dev
+          
+          wget https://mirrorservice.org/sites/sourceware.org/pub/gcc/releases/gcc-4.8.5/gcc-4.8.5.tar.bz2
+          tar -xjf gcc-4.8.5.tar.bz2
+          cd gcc-4.8.5
+
+          wget https://trac.macports.org/raw-attachment/ticket/53076/patch-gcc46-texi.diff
+          git apply patch-gcc46-texi.diff
+          wget https://raw.githubusercontent.com/ChrisMacGregor/esp-open-sdk/master/1001-fix-reload1-compile-error.patch
+          git apply 1001-fix-reload1-compile-error.patch
+          wget -O ec1cc0.patch https://gist.githubusercontent.com/prince-chrismc/c27afb5f87dae1a7ea76341218672088/raw/923bade73ac1c848fe841599a2d469caac8e16f2/gcc4.8-ec1cc0.patch
+          cat ec1cc0.patch
+          git apply ec1cc0.patch
+          
+          ./configure --prefix ${{ github.workspace }}/gcc --enable-languages=c,c++ --disable-libada --disable-libssp
+          make -j $(nproc)
+          sduo make install
+
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/install/cmake
         with:
           version: "3.26.3"
