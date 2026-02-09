@@ -27,11 +27,12 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/BignumHandleTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
 
 find_package(jsoncons CONFIG)
 if(TARGET jsoncons)
-  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traitclans/JsonconsTest.cpp)
 endif()
 
 include("private-find-boost-json")
