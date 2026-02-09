@@ -498,6 +498,86 @@ namespace jwt {
 #endif
 		};
 
+		/**
+		 * \brief Handle class for BIGNUM structures
+		 *
+		 * This handle class wraps OpenSSL's BIGNUM type and manages its lifecycle.
+		 * It provides copy semantics (via BN_dup) and move semantics for efficient
+		 * passing between containers.
+		 */
+		class bn_handle {
+		public:
+			/**
+			 * \brief Creates a new BIGNUM initialized to zero.
+			 * \throws std::runtime_error if BIGNUM allocation fails
+			 */
+			bn_handle() {
+				m_bn = BN_new();
+				if (m_bn == nullptr) throw std::runtime_error("BN_new failed");
+			}
+
+			/**
+			 * \brief Construct a handle from a pointer. The handle takes ownership.
+			 * \param bn The BIGNUM to store. Performs BN_dup() to create an independent copy.
+			 * \throws std::runtime_error if BIGNUM duplication fails
+			 */
+			explicit bn_handle(const BIGNUM* bn) {
+				if (bn == nullptr) throw std::runtime_error("BIGNUM pointer is null");
+				m_bn = BN_dup(bn);
+				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+			}
+
+			/**
+			 * \brief Copy constructor. Creates an independent copy of the BIGNUM.
+			 * \throws std::runtime_error if BIGNUM duplication fails
+			 */
+			bn_handle(const bn_handle& other) {
+				if (other.m_bn == nullptr) throw std::runtime_error("BIGNUM is null");
+				m_bn = BN_dup(other.m_bn);
+				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+			}
+
+			/**
+			 * \brief Move constructor. Steals ownership from other.
+			 */
+			bn_handle(bn_handle&& other) noexcept : m_bn{other.m_bn} { other.m_bn = nullptr; }
+
+			/**
+			 * \brief Destructor. Frees the BIGNUM.
+			 */
+			~bn_handle() noexcept {
+				if (m_bn != nullptr) BN_free(m_bn);
+			}
+
+			/**
+			 * \brief Copy assignment. Deleted to maintain immutability.
+			 */
+			bn_handle& operator=(const bn_handle&) = delete;
+
+			/**
+			 * \brief Move assignment. Deleted to maintain immutability.
+			 */
+			bn_handle& operator=(bn_handle&&) = delete;
+
+			/**
+			 * \brief Get the underlying BIGNUM pointer.
+			 */
+			BIGNUM* get() const noexcept { return m_bn; }
+
+			/**
+			 * \brief Check if the handle is null.
+			 */
+			bool operator!() const noexcept { return m_bn == nullptr; }
+
+			/**
+			 * \brief Check if the handle is non-null.
+			 */
+			explicit operator bool() const noexcept { return m_bn != nullptr; }
+
+		private:
+			BIGNUM* m_bn{nullptr};
+		};
+
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
 		}
@@ -839,11 +919,9 @@ namespace jwt {
 		 */
 		inline
 #ifdef JWT_OPENSSL_1_0_0
-			std::string
-			bn2raw(BIGNUM* bn)
+			std::string bn2raw(BIGNUM* bn)
 #else
-			std::string
-			bn2raw(const BIGNUM* bn)
+			std::string bn2raw(const BIGNUM* bn)
 #endif
 		{
 			std::string res(BN_num_bytes(bn), '\0');
@@ -1400,29 +1478,22 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(const BIGNUM* key, const EVP_MD* (*md)(), std::string name)
-				: secret(BN_dup(key)), md(md), alg_name(std::move(name)) {}
-			hmacsha(const hmacsha& other) : secret(BN_dup(other.secret)), md(other.md), alg_name(other.alg_name) {}
-			hmacsha(hmacsha&& other) : secret(nullptr), md(std::move(other.md)), alg_name(std::move(other.alg_name)) {
-				if (BN_copy(other.secret, secret) == nullptr) throw std::runtime_error("failed to copy BN");
-				other.secret = nullptr;
-			}
-			~hmacsha() { BN_free(secret); }
-			hmacsha& operator=(const hmacsha& other)= delete;
-			hmacsha& operator=(hmacsha&& other) = delete;
-			/**
-			 * Sign jwt data
-			 *
-			 * \param data The data to sign
-			 * \param ec error_code filled with details on error
-			 * \return HMAC signature for the given data
-			 */
+				: secret(key), md(md), alg_name(std::move(name)) {}
+
+			// Explicitly defaulted copy/move constructors (bn_handle provides RAII)
+			hmacsha(const hmacsha&) = default;
+			hmacsha(hmacsha&&) noexcept = default;
+
+			// Assignment operators deleted to maintain immutability
+			hmacsha& operator=(const hmacsha&) = delete;
+			hmacsha& operator=(hmacsha&&) = delete;
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
 
-				std::vector<unsigned char> buffer(BN_num_bytes(secret), '\0');
-				const auto buffer_size = BN_bn2bin(secret, buffer.data());
+				std::vector<unsigned char> buffer(BN_num_bytes(secret.get()), '\0');
+				const auto buffer_size = BN_bn2bin(secret.get(), buffer.data());
 				buffer.resize(buffer_size);
 
 				if (HMAC(md(), buffer.data(), buffer_size, reinterpret_cast<const unsigned char*>(data.data()),
@@ -1465,12 +1536,13 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			BIGNUM* secret;
+			helper::bn_handle secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
 			const std::string alg_name;
 		};
+
 		/**
 		 * \brief Base class for RSA family of algorithms
 		 */
