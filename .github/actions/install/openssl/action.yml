@@ -4,18 +4,57 @@ inputs:
   version:
     description: The desired OpenSSL version to install
     required: false
-    default: "openssl-3.0.0"
+    default: "openssl-3.3.0"
 runs:
   using: composite
   steps:
-    - run: |
-        cd /tmp
-        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+    - name: Cache CMake
+      id: cache-openssl
+      uses: actions/cache@v4
+      with:
+        path: openssl-${{ inputs.version }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-openssl-${{ inputs.version }}
+
+    - uses: ilammy/setup-nasm@v1
+    - if: runner.os == 'Windows' && steps.cache-openssl.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Invoke-WebRequest -OutFile ${{ inputs.version }}.tar.gz -Uri https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
+    - if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+    - if: runner.os == 'Windows' && steps.cache-openssl.outputs.cache-hit != 'true'
+      shell: cmd
+      run: |
+        tar -zxf ${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
-        ./config --prefix=/tmp --libdir=lib
-        make -j $(nproc)
-        sudo make -j $(nproc) install_sw
-        echo "OPENSSL_ROOT_DIR=/tmp" >> "$GITHUB_ENV"
-        echo "OpenSSL_ROOT=/tmp" >> "$GITHUB_ENV"
+        perl Configure VC-WIN64A --prefix=${{ github.workspace }}\openssl
+        nmake
+    - if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        cd openssl-${{ inputs.version }}
+        nmake install
+        echo "OPENSSL_ROOT_DIR=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
+        echo "OpenSSL_ROOT=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
+
+    - if: runner.os == 'Linux' && steps.cache-openssl.outputs.cache-hit != 'true'
       shell: bash
+      run: |
+        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
+        tar -zxf ./${{ inputs.version }}.tar.gz
+        cd openssl-${{ inputs.version }}
+
+        # Check version using major number comparison
+        if [[ "${{ inputs.version }}" -ge "3.0.0" ]]; then
+          ./config --prefix=${{ github.workspace }}/openssl --libdir=lib no-tests
+        else
+          ./config --prefix=${{ github.workspace }}/openssl --libdir=lib
+        fi
+        make -j $(nproc)
+    - if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        cd openssl-${{ inputs.version }}
+        sudo make -j $(nproc) install_sw
+        echo "OPENSSL_ROOT_DIR=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
+        echo "OpenSSL_ROOT=${{ github.workspace }}/openssl" >> "$GITHUB_ENV"
