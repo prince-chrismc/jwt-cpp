@@ -919,9 +919,11 @@ namespace jwt {
 		 */
 		inline
 #ifdef JWT_OPENSSL_1_0_0
-			std::string bn2raw(BIGNUM* bn)
+			std::string
+			bn2raw(BIGNUM* bn)
 #else
-			std::string bn2raw(const BIGNUM* bn)
+			std::string
+			bn2raw(const BIGNUM* bn)
 #endif
 		{
 			std::string res(BN_num_bytes(bn), '\0');

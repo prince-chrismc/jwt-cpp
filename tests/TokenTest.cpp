@@ -61,9 +61,9 @@ TEST(TokenTest, CreateTokenHS256) {
 
 TEST(TokenTest, CreateTokenHS256Bytes) {
 	// https://stackoverflow.com/a/70790564
-    const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
-    BIGNUM *cipher = nullptr;
-    ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
+	const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
+	BIGNUM* cipher = nullptr;
+	ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
 	ASSERT_NE(nullptr, cipher);
 	std::unique_ptr<BIGNUM, decltype(&BN_free)> cipher_guard(cipher, BN_free);
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::hs256{cipher});
@@ -530,9 +530,9 @@ TEST(TokenTest, VerifyTokenHS256Bytes) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.iXeab-Ef-S-JlVH5zxpqR4BIrz7DiUNH-0EljbYaf68";
 
-    const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
-    BIGNUM *cipher = nullptr;
-    ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
+	const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
+	BIGNUM* cipher = nullptr;
+	ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
 	ASSERT_NE(nullptr, cipher);
 	std::unique_ptr<BIGNUM, decltype(&BN_free)> cipher_guard(cipher, BN_free);
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{cipher}).with_issuer("auth0");
