@@ -121,7 +121,7 @@ set(TEST_SOURCES
 
 # Add trait-specific test files (legacy, for additional trait-specific tests)
 if(TARGET jsoncons)
-  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traitclans/JsonconsTest.cpp)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
 endif()
 
 if(TARGET boost_json)

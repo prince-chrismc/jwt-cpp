@@ -565,6 +565,15 @@ namespace jwt {
 			BIGNUM* get() const noexcept { return m_bn; }
 
 			/**
+			 * \brief Take ownership of the underlying BIGNUM pointer.
+			 */
+			BIGNUM* release() noexcept {
+				BIGNUM* temp = m_bn;
+				m_bn = nullptr;
+				return temp;
+			}
+
+			/**
 			 * \brief Check if the handle is null.
 			 */
 			bool operator!() const noexcept { return m_bn == nullptr; }
@@ -936,22 +945,22 @@ namespace jwt {
 		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+		inline bn_handle raw2bn(const std::string& raw, std::error_code& ec) {
 			auto bn =
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
 			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
 			if (!bn) {
 				ec = error::rsa_error::set_rsa_failed;
-				return {nullptr, BN_free};
+				return bn_handle(nullptr);
 			}
-			return {bn, BN_free};
+			return bn_handle(bn);
 		}
 		/**
 		 * Convert an std::string to a OpenSSL BIGNUM
 		 * \param raw String to convert
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+		inline bn_handle raw2bn(const std::string& raw) {
 			std::error_code ec;
 			auto res = raw2bn(raw, ec);
 			error::throw_if_error(ec);
@@ -1465,13 +1474,13 @@ namespace jwt {
 			/**
 			 * Construct new hmac algorithm
 			 *
-			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(helper::raw2bn(key).release()), md(md), alg_name(std::move(name)) {}
+				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Construct new hmac algorithm
 			 *
@@ -2162,7 +2171,7 @@ namespace jwt {
 		struct hs256 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
-			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs256(std::string key) : hmacsha(std::move(key), EVP_sha256, "HS256") {}
@@ -2178,7 +2187,7 @@ namespace jwt {
 		struct hs384 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
-			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs384(std::string key) : hmacsha(std::move(key), EVP_sha384, "HS384") {}
@@ -2194,13 +2203,13 @@ namespace jwt {
 		struct hs512 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
-			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM 
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs512(std::string key) : hmacsha(std::move(key), EVP_sha512, "HS512") {}
 			/**
 			 * Construct new instance of algorithm
-			 * 
+			 *
 			 * This can be used to sign and verify tokens.
 		 	 * \snippet{trimleft} hs512.cpp use HMAC algo with BIGNUM
 			 *
