@@ -1005,6 +1005,3 @@ TEST(TokenTest, MoveDecodedToken) {
 	ASSERT_EQ("JWS", decoded_token0.get_type());
 	ASSERT_EQ("auth0", decoded_token0.get_issuer());
 }
-#include <gtest/gtest.h>
-#include <jwt-cpp/jwt.h>
-#include <openssl/bn.h>
