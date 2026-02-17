@@ -83,7 +83,6 @@ TEST(BignumHandleTest, OperatorNot) {
 	EXPECT_FALSE(!bn_valid);
 
 	jwt::helper::bn_handle bn_source;
-	BIGNUM* ptr = bn_source.get();
 	jwt::helper::bn_handle bn_dest(std::move(bn_source));
 	EXPECT_TRUE(!bn_source);
 }
