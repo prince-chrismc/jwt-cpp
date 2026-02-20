@@ -89,10 +89,11 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "v5.1.1-stable", name: "5.1.1"}
-          - { ref: "v5.2.0-stable", name: "5.2.0" }
-          - { ref: "v5.3.0-stable", name: "5.3.0"}
-          - { ref: "v5.7.0-stable", name: "5.7.0"}
+          # 5.6.0 improved BIGNUM compatibility with OpenSSL, see 
+          # https://github.com/wolfSSL/wolfssl/pull/6165
+          - { ref: "v5.6.6-stable", name: "5.6.6"}
+          - { ref: "v5.7.6-stable", name: "5.7.6"}
+          - { ref: "v5.8.4-stable", name: "5.8.4"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v4
