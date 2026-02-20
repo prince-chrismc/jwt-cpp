@@ -29,7 +29,7 @@ jobs:
           version: ${{ matrix.openssl.tag }}
 
       - name: configure
-        run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp
+        run: cmake --preset unit-tests
       - run: cmake --build --preset unit-tests
       - name: test
         run: ctest --preset unit-tests --output-on-failure
