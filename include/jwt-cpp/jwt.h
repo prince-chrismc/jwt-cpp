@@ -498,6 +498,95 @@ namespace jwt {
 #endif
 		};
 
+		/**
+		 * \brief Handle class for BIGNUM structures
+		 *
+		 * This handle class wraps OpenSSL's BIGNUM type and manages its lifecycle.
+		 * It provides copy semantics (via BN_dup) and move semantics for efficient
+		 * passing between containers.
+		 */
+		class bn_handle {
+		public:
+			/**
+			 * \brief Creates a new BIGNUM initialized to zero.
+			 * \throws std::runtime_error if BIGNUM allocation fails
+			 */
+			bn_handle() {
+				m_bn = BN_new();
+				if (m_bn == nullptr) throw std::runtime_error("BN_new failed");
+			}
+
+			/**
+			 * \brief Construct a handle from a pointer. The handle takes ownership.
+			 * \param bn The BIGNUM to store. Performs BN_dup() to create an independent copy.
+			 * \throws std::runtime_error if BIGNUM duplication fails
+			 */
+			explicit bn_handle(const BIGNUM* bn) {
+				if (bn == nullptr) throw std::runtime_error("BIGNUM pointer is null");
+				m_bn = BN_dup(bn);
+				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+			}
+
+			/**
+			 * \brief Copy constructor. Creates an independent copy of the BIGNUM.
+			 * \throws std::runtime_error if BIGNUM duplication fails
+			 */
+			bn_handle(const bn_handle& other) {
+				if (other.m_bn == nullptr) throw std::runtime_error("BIGNUM is null");
+				m_bn = BN_dup(other.m_bn);
+				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+			}
+
+			/**
+			 * \brief Move constructor. Steals ownership from other.
+			 */
+			bn_handle(bn_handle&& other) noexcept : m_bn{other.m_bn} { other.m_bn = nullptr; }
+
+			/**
+			 * \brief Destructor. Frees the BIGNUM.
+			 */
+			~bn_handle() noexcept {
+				if (m_bn != nullptr) BN_free(m_bn);
+			}
+
+			/**
+			 * \brief Copy assignment. Deleted to maintain immutability.
+			 */
+			bn_handle& operator=(const bn_handle&) = delete;
+
+			/**
+			 * \brief Move assignment. Deleted to maintain immutability.
+			 */
+			bn_handle& operator=(bn_handle&&) = delete;
+
+			/**
+			 * \brief Get the underlying BIGNUM pointer.
+			 */
+			BIGNUM* get() const noexcept { return m_bn; }
+
+			/**
+			 * \brief Take ownership of the underlying BIGNUM pointer.
+			 */
+			BIGNUM* release() noexcept {
+				BIGNUM* temp = m_bn;
+				m_bn = nullptr;
+				return temp;
+			}
+
+			/**
+			 * \brief Check if the handle is null.
+			 */
+			bool operator!() const noexcept { return m_bn == nullptr; }
+
+			/**
+			 * \brief Check if the handle is non-null.
+			 */
+			explicit operator bool() const noexcept { return m_bn != nullptr; }
+
+		private:
+			BIGNUM* m_bn{nullptr};
+		};
+
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
 		}
@@ -856,22 +945,22 @@ namespace jwt {
 		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+		inline bn_handle raw2bn(const std::string& raw, std::error_code& ec) {
 			auto bn =
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
 			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
 			if (!bn) {
 				ec = error::rsa_error::set_rsa_failed;
-				return {nullptr, BN_free};
+				return bn_handle(nullptr);
 			}
-			return {bn, BN_free};
+			return bn_handle(bn);
 		}
 		/**
 		 * Convert an std::string to a OpenSSL BIGNUM
 		 * \param raw String to convert
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+		inline bn_handle raw2bn(const std::string& raw) {
 			std::error_code ec;
 			auto res = raw2bn(raw, ec);
 			error::throw_if_error(ec);
@@ -1385,25 +1474,41 @@ namespace jwt {
 			/**
 			 * Construct new hmac algorithm
 			 *
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
+				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
 			/**
-			 * Sign jwt data
+			 * Construct new hmac algorithm
 			 *
-			 * \param data The data to sign
-			 * \param ec error_code filled with details on error
-			 * \return HMAC signature for the given data
+			 * \param key Key to use for HMAC
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
 			 */
+			hmacsha(const BIGNUM* key, const EVP_MD* (*md)(), std::string name)
+				: secret(key), md(md), alg_name(std::move(name)) {}
+
+			// Explicitly defaulted copy/move constructors (bn_handle provides RAII)
+			hmacsha(const hmacsha&) = default;
+			hmacsha(hmacsha&&) noexcept = default;
+
+			// Assignment operators deleted to maintain immutability
+			hmacsha& operator=(const hmacsha&) = delete;
+			hmacsha& operator=(hmacsha&&) = delete;
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
-						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
+
+				std::vector<unsigned char> buffer(BN_num_bytes(secret.get()), '\0');
+				const auto buffer_size = BN_bn2bin(secret.get(), buffer.data());
+				buffer.resize(buffer_size);
+
+				if (HMAC(md(), buffer.data(), buffer_size, reinterpret_cast<const unsigned char*>(data.data()),
+						 static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
 					ec = error::signature_generation_error::hmac_failed;
@@ -1442,12 +1547,13 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			const std::string secret;
+			helper::bn_handle secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
 			const std::string alg_name;
 		};
+
 		/**
 		 * \brief Base class for RSA family of algorithms
 		 */
@@ -2065,9 +2171,15 @@ namespace jwt {
 		struct hs256 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs256(std::string key) : hmacsha(std::move(key), EVP_sha256, "HS256") {}
+			/**
+			 * Construct new instance of algorithm
+			 * \param key HMAC signing key
+			 */
+			explicit hs256(const BIGNUM* key) : hmacsha(key, EVP_sha256, "HS256") {}
 		};
 		/**
 		 * HS384 algorithm
@@ -2075,9 +2187,15 @@ namespace jwt {
 		struct hs384 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs384(std::string key) : hmacsha(std::move(key), EVP_sha384, "HS384") {}
+			/**
+			 * Construct new instance of algorithm
+			 * \param key HMAC signing key
+			 */
+			explicit hs384(const BIGNUM* key) : hmacsha(key, EVP_sha384, "HS384") {}
 		};
 		/**
 		 * HS512 algorithm
@@ -2085,9 +2203,19 @@ namespace jwt {
 		struct hs512 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
+			 * \deprecated Using a character is not recommended and hardened applications should use BIGNUM
 			 * \param key HMAC signing key
 			 */
 			explicit hs512(std::string key) : hmacsha(std::move(key), EVP_sha512, "HS512") {}
+			/**
+			 * Construct new instance of algorithm
+			 *
+			 * This can be used to sign and verify tokens.
+		 	 * \snippet{trimleft} hs512.cpp use HMAC algo with BIGNUM
+			 *
+			 * \param key HMAC signing key
+			 */
+			explicit hs512(const BIGNUM* key) : hmacsha(key, EVP_sha512, "HS512") {}
 		};
 		/**
 		 * RS256 algorithm.
