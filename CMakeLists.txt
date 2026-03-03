@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 cmake_policy(VERSION 3.14)
 if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
-  cmake_policy(SET CMP0135 OLD)
+  cmake_policy(SET CMP0135 NEW)
 endif()
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
@@ -13,7 +13,7 @@ if(HUNTER_ENABLED)
   message(STATUS "jwt-cpp: using hunter for dependency resolution")
 endif()
 
-project(jwt-cpp)
+project(jwt-cpp LANGUAGES CXX)
 
 option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
@@ -35,7 +35,7 @@ set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
-set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp)
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp glaze-json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -81,8 +81,8 @@ if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
     message(STATUS "jwt-cpp: using FetchContent for nlohmann-json required for tests")
     include(FetchContent)
     fetchcontent_declare(nlohmann_json
-      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-      URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+      URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+      URL_MD5 e155202b2a589137f6804724bd182f12)
     fetchcontent_makeavailable(nlohmann_json)
   endif()
 endif()
@@ -132,7 +132,7 @@ if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
-  target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
+  target_link_libraries(jwt-cpp INTERFACE picojson::picojson)
 endif()
 
 # Hunter needs relative paths so the files are placed correctly
@@ -143,7 +143,7 @@ endif()
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
   INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.0
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.2
                                  COMPATIBILITY ExactVersion)
 
 install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

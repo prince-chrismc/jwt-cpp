@@ -57,7 +57,9 @@
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
-#if LIBRESSL_VERSION_NUMBER >= 0x3050300fL
+#if LIBRESSL_VERSION_NUMBER >= 0x3070100fL // 3.7.1 - EdDSA support
+#define JWT_OPENSSL_1_1_1
+#elif LIBRESSL_VERSION_NUMBER >= 0x3050300fL // 3.5.3
 #define JWT_OPENSSL_1_1_0
 #else
 #define JWT_OPENSSL_1_0_0
@@ -722,13 +724,23 @@ namespace jwt {
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
-				const int len = static_cast<int>(epkey.size());
+				// Ensure the size fits into an int before casting
+				if (epkey.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			} else {
-				const int len = static_cast<int>(key.size());
+				// Ensure the size fits into an int before casting
+				if (key.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
@@ -808,7 +820,7 @@ namespace jwt {
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
-		 * 
+		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing the certificate encoded as pem
@@ -872,7 +884,7 @@ namespace jwt {
 		 * The string should contain a pem encoded certificate or public key
 		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
-		 * 
+		 *
 		 * \param key		String containing the certificate or key encoded as pem
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -887,7 +899,7 @@ namespace jwt {
 
 		/**
 		 * \brief Load a private key from a string.
-		 * 
+		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing a private key as pem
@@ -1077,7 +1089,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
-		 * 
+		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -1372,7 +1384,7 @@ namespace jwt {
 		struct hmacsha {
 			/**
 			 * Construct new hmac algorithm
-			 * 
+			 *
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
@@ -1381,7 +1393,7 @@ namespace jwt {
 				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
-			 * 
+			 *
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return HMAC signature for the given data
@@ -1402,7 +1414,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
-			 * 
+			 *
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details about failure.
@@ -1423,7 +1435,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * 
+			 *
 			 * \return algorithm's name
 			 */
 			std::string name() const { return alg_name; }
@@ -1442,7 +1454,7 @@ namespace jwt {
 		struct rsa {
 			/**
 			 * Construct new rsa algorithm
-			 * 
+			 *
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -1459,6 +1471,17 @@ namespace jwt {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
+			}
+			/**
+			 * Construct new rsa algorithm
+			 *
+			 * \param key_pair openssl EVP_PKEY structure containing RSA key pair. The private part is optional.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 */
+			rsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)) {
+				if (!pkey) { throw error::rsa_exception(error::rsa_error::no_key_provided); }
 			}
 			/**
 			 * Sign jwt data
@@ -1495,7 +1518,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
-			 * 
+			 *
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details on failure
@@ -1571,6 +1594,22 @@ namespace jwt {
 			}
 
 			/**
+			 * Construct new ecdsa algorithm
+			 *
+			 * \param key_pair openssl EVP_PKEY structure containing ECDSA key pair. The private part is optional.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 * \param siglen The bit length of the signature
+			 */
+			ecdsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)), signature_length(siglen) {
+				if (!pkey) { throw error::ecdsa_exception(error::ecdsa_error::no_key_provided); }
+				size_t keysize = EVP_PKEY_bits(pkey.get());
+				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
+			}
+
+			/**
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
@@ -1587,7 +1626,7 @@ namespace jwt {
 					ec = error::signature_generation_error::signinit_failed;
 					return {};
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -1627,7 +1666,7 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -1769,6 +1808,7 @@ namespace jwt {
 		 *
 		 * The EdDSA algorithms were introduced in [OpenSSL v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html),
 		 * so these algorithms are only available when building against this version or higher.
+		 * LibreSSL added EdDSA (Ed25519) functionality in [LibreSSL 3.7.1](https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.1-relnotes.txt)
 		 */
 		struct eddsa {
 			/**
@@ -1812,14 +1852,13 @@ namespace jwt {
 				size_t len = EVP_PKEY_size(pkey.get());
 				std::string res(len, '\0');
 
-// LibreSSL is the special kid in the block, as it does not support EVP_DigestSign.
-// OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this
-// mess.
-#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
+// LibreSSL and OpenSSL, require the oneshot EVP_DigestSign API.
+// wolfSSL uses the Update/Final pattern.
+#if defined(LIBWOLFSSL_VERSION_HEX)
 				ERR_clear_error();
 				if (EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) !=
 					1) {
-					std::cout << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+					std::cout << ERR_error_string(ERR_get_error(), NULL) << '\n';
 					ec = error::signature_generation_error::signupdate_failed;
 					return {};
 				}
@@ -1856,10 +1895,9 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-// LibreSSL is the special kid in the block, as it does not support EVP_DigestVerify.
-// OpenSSL on the otherhand does not support using EVP_DigestVerifyUpdate for eddsa, which is why we end up with this
-// mess.
-#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
+// LibreSSL and OpenSSL, require the oneshot EVP_DigestVerify API.
+// wolfSSL uses the Update/Final pattern.
+#if defined(LIBWOLFSSL_VERSION_HEX)
 				if (EVP_DigestVerifyUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()),
 										   data.size()) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
@@ -1947,7 +1985,7 @@ namespace jwt {
 					return {};
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -1996,7 +2034,7 @@ namespace jwt {
 					return;
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -2053,13 +2091,13 @@ namespace jwt {
 		};
 		/**
 		 * RS256 algorithm.
-		 * 
+		 *
 		 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 		 */
 		struct rs256 : public rsa {
 			/**
 			 * \brief Construct new instance of algorithm
-			 * 
+			 *
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -2173,7 +2211,7 @@ namespace jwt {
 		 *
 		 * https://en.wikipedia.org/wiki/EdDSA#Ed25519
 		 *
-		 * Requires at least OpenSSL 1.1.1.
+		 * Requires at least OpenSSL 1.1.1 or LibreSSL 3.7.1.
 		 */
 		struct ed25519 : public eddsa {
 			/**
@@ -2190,12 +2228,13 @@ namespace jwt {
 				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 		/**
 		 * Ed448 algorithm
 		 *
 		 * https://en.wikipedia.org/wiki/EdDSA#Ed448
 		 *
-		 * Requires at least OpenSSL 1.1.1.
+		 * Requires at least OpenSSL 1.1.1. Note: Not supported by LibreSSL.
 		 */
 		struct ed448 : public eddsa {
 			/**
@@ -2211,7 +2250,8 @@ namespace jwt {
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
-#endif
+#endif // !LIBRESSL_VERSION_NUMBER
+#endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
 
 		/**
 		 * PS256 algorithm
@@ -2459,22 +2499,26 @@ namespace jwt {
 		struct is_valid_json_array {
 			template<typename T>
 			using value_type_t = typename T::value_type;
+			using front_base_type = typename std::decay<decltype(std::declval<array_type>().front())>::type;
 
 			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
-										  std::is_same<typename array_type::value_type, value_type>::value;
+										  std::is_same<typename array_type::value_type, value_type>::value &&
+										  std::is_same<front_base_type, value_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
 		using is_substr_start_end_index_signature =
-			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>(),
-																			  std::declval<integer_type>())),
+			typename std::is_same<decltype(std::declval<string_type>().substr(
+									  static_cast<size_t>(std::declval<integer_type>()),
+									  static_cast<size_t>(std::declval<integer_type>()))),
 								  string_type>;
 
 		template<typename string_type, typename integer_type>
 		using is_substr_start_index_signature =
-			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>())),
+			typename std::is_same<decltype(std::declval<string_type>().substr(
+									  static_cast<size_t>(std::declval<integer_type>()))),
 								  string_type>;
 
 		template<typename string_type>
@@ -2581,7 +2625,8 @@ namespace jwt {
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
-			: val(typename json_traits::integer_type(std::chrono::system_clock::to_time_t(d))) {}
+			: val(typename json_traits::integer_type(
+				  std::chrono::duration_cast<std::chrono::seconds>(d.time_since_epoch()).count())) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::array_type a) : val(std::move(a)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::value_type v) : val(std::move(v)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const set_t& s) : val(typename json_traits::array_type(s.begin(), s.end())) {}
@@ -2623,15 +2668,16 @@ namespace jwt {
 		/**
 		 * \brief Get the contained JSON value as a date
 		 *
-		 * If the value is a decimal, it is rounded up to the closest integer
+		 * If the value is a decimal, it is rounded to the closest integer
 		 *
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number) return system_clock::from_time_t(std::round(as_number()));
-			return system_clock::from_time_t(as_integer());
+			if (get_type() == json::type::number)
+				return date(std::chrono::seconds(static_cast<int64_t>(std::llround(as_number()))));
+			return date(std::chrono::seconds(as_integer()));
 		}
 
 		/**
@@ -3216,8 +3262,8 @@ namespace jwt {
 		 * \param d token expiration timeout
 		 * \return *this to allow for method chaining
 		 */
-		template<class Rep>
-		builder& set_expires_in(const std::chrono::duration<Rep>& d) {
+		template<class Rep, class Period>
+		builder& set_expires_in(const std::chrono::duration<Rep, Period>& d) {
 			return set_payload_claim("exp", basic_claim<json_traits>(clock.now() + d));
 		}
 		/**
@@ -3728,9 +3774,9 @@ namespace jwt {
 		 * Specify a claim to check for using the specified operation.
 		 * This is helpful for implementating application specific authentication checks
 		 * such as the one seen in partial-claim-verifier.cpp
-		 * 
+		 *
 		 * \snippet{trimleft} partial-claim-verifier.cpp verifier check custom claim
-		 * 
+		 *
 		 * \param name Name of the claim to check for
 		 * \param fn Function to use for verifying the claim
 		 * \return *this to allow chaining
@@ -3743,9 +3789,9 @@ namespace jwt {
 		/**
 		 * Specify a claim to check for equality (both type & value).
 		 * See the private-claims.cpp example.
-		 * 
+		 *
 		 * \snippet{trimleft} private-claims.cpp verify exact claim
-		 * 
+		 *
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
@@ -3756,13 +3802,13 @@ namespace jwt {
 
 		/**
 		 * \brief Add an algorithm available for checking.
-		 * 
+		 *
 		 * This is used to handle incomming tokens for predefined algorithms
 		 * which the authorization server is provided. For example a small system
 		 * where only a single RSA key-pair is used to sign tokens
-		 * 
+		 *
 		 * \snippet{trimleft} example/rsa-verify.cpp allow rsa algorithm
-		 * 
+		 *
 		 * \tparam Algorithm any algorithm such as those provided by jwt::algorithm
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
@@ -4122,18 +4168,18 @@ namespace jwt {
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
-		/** 
+		/**
 		 * Gets the current system time
-		 * \return time_point of the host system 
+		 * \return time_point of the host system
 		 */
 		date now() const { return date::clock::now(); }
 	};
 
 	/**
 	 * Create a verifier using the default_clock.
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
@@ -4153,7 +4199,7 @@ namespace jwt {
 	/**
 	 * \brief Decode a token. This can be used to to help access important feild like 'x5c'
 	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \tparam Decode is callable, taking a string_type and returns a string_type.
 	 *         It should ensure the padding of the input and then base64url decode and
@@ -4172,7 +4218,7 @@ namespace jwt {
 	/**
 	 * Decode a token. This can be used to to help access important feild like 'x5c'
 	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
 	 * \return Decoded token
@@ -4194,10 +4240,10 @@ namespace jwt {
 		return jwk<json_traits>(jwk_);
 	}
 	/**
-	 * Parse a JSON Web Key Set. This can be used to to help access 
+	 * Parse a JSON Web Key Set. This can be used to to help access
 	 * important feild like 'x5c' for verifying tokens. See example
 	 * jwks-verify.cpp for more information.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \param jwks_ string buffer containing the JSON object
 	 * \return Parsed JSON object containing the data of the JWK SET string

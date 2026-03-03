@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.14)
 project(jwt-cpp-traits)
 
 if(NOT TARGET jwt-cpp)
@@ -33,4 +33,10 @@ find_package(jsoncpp CONFIG)
 if(TARGET jsoncpp_static)
   add_executable(open-source-parsers-jsoncpp open-source-parsers-jsoncpp.cpp)
   target_link_libraries(open-source-parsers-jsoncpp jsoncpp_static jwt-cpp::jwt-cpp)
+endif()
+
+find_package(glaze CONFIG)
+if(TARGET glaze::glaze)
+  add_executable(glaze-json glaze-json.cpp)
+  target_link_libraries(glaze-json glaze::glaze jwt-cpp::jwt-cpp)
 endif()
