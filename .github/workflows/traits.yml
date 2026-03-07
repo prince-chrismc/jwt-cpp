@@ -34,7 +34,7 @@ jobs:
 
       # Install the JSON library
       - if: matrix.target.name == 'danielaparker-jsoncons'
-        uses: ./.github/actions/install/danielaparker-jsoncons
+        uses: ./.github/actions/install/${{ matrix.target.name }}
         with:
           version: ${{matrix.target.tag}}
 
