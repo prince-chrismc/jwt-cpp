@@ -43,7 +43,7 @@ TYPED_TEST(ClaimTest, SetAudienceAsStringDeprecated) {
 TYPED_TEST(ClaimTest, SetAudienceAsString) {
 
 	auto cipher = jwt::helper::raw2bn("test");
-	auto token = jwt::create().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256(cipher.get()));
+	auto token = jwt::create().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256(cipher.release()));
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
 			  token);
 }

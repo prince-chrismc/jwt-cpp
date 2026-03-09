@@ -505,13 +505,13 @@ namespace jwt {
 		 * It provides copy semantics (via BN_dup) and move semantics for efficient
 		 * passing between containers.
 		 */
-		class bn_handle {
+		class bignum_handle {
 		public:
 			/**
 			 * \brief Creates a new BIGNUM initialized to zero.
 			 * \throws std::runtime_error if BIGNUM allocation fails
 			 */
-			bn_handle() {
+			bignum_handle() {
 				m_bn = BN_new();
 				if (m_bn == nullptr) throw std::runtime_error("BN_new failed");
 			}
@@ -521,17 +521,18 @@ namespace jwt {
 			 * \param bn The BIGNUM to store. Performs BN_dup() to create an independent copy.
 			 * \throws std::runtime_error if BIGNUM duplication fails
 			 */
-			explicit bn_handle(const BIGNUM* bn) {
+			explicit bignum_handle(const BIGNUM* bn) {
 				if (bn == nullptr) throw std::runtime_error("BIGNUM pointer is null");
-				m_bn = BN_dup(bn);
+				m_bn = bn;
 				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+				bn = nullptr; // Prevent the caller from accidentally using the original pointer after ownership transfer
 			}
 
 			/**
 			 * \brief Copy constructor. Creates an independent copy of the BIGNUM.
 			 * \throws std::runtime_error if BIGNUM duplication fails
 			 */
-			bn_handle(const bn_handle& other) {
+			bignum_handle(const bignum_handle& other) {
 				if (other.m_bn == nullptr) throw std::runtime_error("BIGNUM is null");
 				m_bn = BN_dup(other.m_bn);
 				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
@@ -540,35 +541,47 @@ namespace jwt {
 			/**
 			 * \brief Move constructor. Steals ownership from other.
 			 */
-			bn_handle(bn_handle&& other) noexcept : m_bn{other.m_bn} { other.m_bn = nullptr; }
+			bignum_handle(bignum_handle&& other) noexcept : m_bn{other.m_bn} { other.m_bn = nullptr; }
 
 			/**
 			 * \brief Destructor. Frees the BIGNUM.
 			 */
-			~bn_handle() noexcept {
-				if (m_bn != nullptr) BN_free(m_bn);
+			~bignum_handle() noexcept {
+				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
 			}
 
 			/**
-			 * \brief Copy assignment. Deleted to maintain immutability.
+			 * \brief Copy assignment. Creates an independent copy of the BIGNUM.
+			 * \throws std::runtime_error if BIGNUM duplication fails
 			 */
-			bn_handle& operator=(const bn_handle&) = delete;
+			bignum_handle& operator=(const bignum_handle& other) {
+				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
+				if (other.m_bn == nullptr) throw std::runtime_error("BIGNUM is null");
+				m_bn = BN_dup(other.m_bn);
+				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
+				return *this;
+			}
 
 			/**
-			 * \brief Move assignment. Deleted to maintain immutability.
+			 * \brief Move assignment. Steals ownership from other.
 			 */
-			bn_handle& operator=(bn_handle&&) = delete;
+			bignum_handle& operator=(bignum_handle&& other) noexcept {
+				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
+				m_bn = other.m_bn;
+				other.m_bn = nullptr;
+				return *this;
+			}
 
 			/**
 			 * \brief Get the underlying BIGNUM pointer.
 			 */
-			BIGNUM* get() const noexcept { return m_bn; }
+			const BIGNUM* get() const noexcept { return m_bn; }
 
 			/**
 			 * \brief Take ownership of the underlying BIGNUM pointer.
 			 */
-			BIGNUM* release() noexcept {
-				BIGNUM* temp = m_bn;
+			const BIGNUM* release() noexcept {
+				const BIGNUM* temp = m_bn;
 				m_bn = nullptr;
 				return temp;
 			}
@@ -584,7 +597,7 @@ namespace jwt {
 			explicit operator bool() const noexcept { return m_bn != nullptr; }
 
 		private:
-			BIGNUM* m_bn{nullptr};
+			const BIGNUM* m_bn{nullptr};
 		};
 
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
@@ -945,22 +958,22 @@ namespace jwt {
 		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
 		 * \return BIGNUM representation
 		 */
-		inline bn_handle raw2bn(const std::string& raw, std::error_code& ec) {
+		inline bignum_handle raw2bn(const std::string& raw, std::error_code& ec) {
 			auto bn =
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
 			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
 			if (!bn) {
 				ec = error::rsa_error::set_rsa_failed;
-				return bn_handle(nullptr);
+				return bignum_handle(nullptr);
 			}
-			return bn_handle(bn);
+			return bignum_handle(bn);
 		}
 		/**
 		 * Convert an std::string to a OpenSSL BIGNUM
 		 * \param raw String to convert
 		 * \return BIGNUM representation
 		 */
-		inline bn_handle raw2bn(const std::string& raw) {
+		inline bignum_handle raw2bn(const std::string& raw) {
 			std::error_code ec;
 			auto res = raw2bn(raw, ec);
 			error::throw_if_error(ec);
@@ -1079,7 +1092,7 @@ namespace jwt {
 #if defined(JWT_OPENSSL_1_1_1) || defined(JWT_OPENSSL_1_1_0)
 			// After this RSA_free will also free the n and e big numbers
 			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
-			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) == 1) {
+			if (RSA_set0_key(rsa.get(), const_cast<BIGNUM*>(n.get()), const_cast<BIGNUM*>(e.get()), nullptr) == 1) {
 				// This can only fail we passed in NULL for `n` or `e`
 				// https://github.com/openssl/openssl/blob/d6e4056805f54bb1a0ef41fa3a6a35b70c94edba/crypto/rsa/rsa_lib.c#L396
 				// So to make sure there is no memory leak, we hold the references
@@ -1480,7 +1493,7 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			hmacsha(std::string key, const EVP_MD* (*md)(), std::string name)
-				: secret(helper::raw2bn(key)), md(md), alg_name(std::move(name)) {}
+				: secret(std::move(helper::raw2bn(key))), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Construct new hmac algorithm
 			 *
@@ -1491,11 +1504,8 @@ namespace jwt {
 			hmacsha(const BIGNUM* key, const EVP_MD* (*md)(), std::string name)
 				: secret(key), md(md), alg_name(std::move(name)) {}
 
-			// Explicitly defaulted copy/move constructors (bn_handle provides RAII)
 			hmacsha(const hmacsha&) = default;
 			hmacsha(hmacsha&&) noexcept = default;
-
-			// Assignment operators deleted to maintain immutability
 			hmacsha& operator=(const hmacsha&) = delete;
 			hmacsha& operator=(hmacsha&&) = delete;
 			std::string sign(const std::string& data, std::error_code& ec) const {
@@ -1547,7 +1557,7 @@ namespace jwt {
 
 		private:
 			/// HMAC secret
-			helper::bn_handle secret;
+			const helper::bignum_handle secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -1876,7 +1886,7 @@ namespace jwt {
 					ec = error::signature_verification_error::create_context_failed;
 					return {};
 				}
-				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
+				ECDSA_SIG_set0(sig.get(), const_cast<BIGNUM*>(r.release()), const_cast<BIGNUM*>(s.release()));
 				psig = sig.get();
 #endif
 
