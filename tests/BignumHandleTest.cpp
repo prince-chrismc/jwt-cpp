@@ -31,7 +31,7 @@ TEST(BignumHandleTest, ConstructorMakesCopy) {
 	EXPECT_EQ(42, BN_get_word(bn.get()));
 	BN_set_word(original, 100);
 
-	EXPECT_EQ(100, BN_get_word(bn.get()));
+	EXPECT_EQ(42, BN_get_word(bn.get()));
 }
 
 TEST(BignumHandleTest, CopyConstructor) {

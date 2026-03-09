@@ -7,10 +7,8 @@
 BIGNUM* make_bn();
 
 int main() {
-	BIGNUM* cipher_raw = make_bn();
-	std::unique_ptr<BIGNUM, decltype(&BN_free)> cipher(cipher_raw, BN_free);
-
 	/* [use HMAC algo with BIGNUM] */
+	const BIGNUM* cipher = make_bn();
 	auto token = jwt::create()
 					 .set_issuer("auth0")
 					 .set_type("JWT")
@@ -18,12 +16,12 @@ int main() {
 					 .set_issued_now()
 					 .set_expires_in(std::chrono::seconds{36000})
 					 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
-					 .sign(jwt::algorithm::hs512(cipher.get()));
+					 .sign(jwt::algorithm::hs512(cipher));
 	/* [use HMAC algo with BIGNUM] */
 
 	std::cout << "token:\n" << token << std::endl;
 
-	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs512(cipher.get())).with_issuer("auth0");
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs512(cipher)).with_issuer("auth0");
 
 	auto decoded = jwt::decode(token);
 

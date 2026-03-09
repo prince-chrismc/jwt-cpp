@@ -517,15 +517,14 @@ namespace jwt {
 			}
 
 			/**
-			 * \brief Construct a handle from a pointer. The handle takes ownership.
+			 * \brief Construct a handle from a pointer.
 			 * \param bn The BIGNUM to store. Performs BN_dup() to create an independent copy.
 			 * \throws std::runtime_error if BIGNUM duplication fails
 			 */
-			explicit bignum_handle(const BIGNUM* bn) {
+			bignum_handle(const BIGNUM* bn) {
 				if (bn == nullptr) throw std::runtime_error("BIGNUM pointer is null");
-				m_bn = bn;
+				m_bn = BN_dup(bn);
 				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
-				bn = nullptr; // Prevent the caller from accidentally using the original pointer after ownership transfer
 			}
 
 			/**
