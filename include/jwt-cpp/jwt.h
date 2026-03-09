@@ -1092,7 +1092,7 @@ namespace jwt {
 #if defined(JWT_OPENSSL_1_1_1) || defined(JWT_OPENSSL_1_1_0)
 			// After this RSA_free will also free the n and e big numbers
 			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
-			if (RSA_set0_key(rsa.get(), const_cast<BIGNUM*>(n.get()), const_cast<BIGNUM*>(e.get()), nullptr) == 1) {
+			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) == 1) {
 				// This can only fail we passed in NULL for `n` or `e`
 				// https://github.com/openssl/openssl/blob/d6e4056805f54bb1a0ef41fa3a6a35b70c94edba/crypto/rsa/rsa_lib.c#L396
 				// So to make sure there is no memory leak, we hold the references
@@ -1886,7 +1886,7 @@ namespace jwt {
 					ec = error::signature_verification_error::create_context_failed;
 					return {};
 				}
-				ECDSA_SIG_set0(sig.get(), const_cast<BIGNUM*>(r.release()), const_cast<BIGNUM*>(s.release()));
+				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
 				psig = sig.get();
 #endif
 
