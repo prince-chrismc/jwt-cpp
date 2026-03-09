@@ -546,7 +546,7 @@ namespace jwt {
 			 * \brief Destructor. Frees the BIGNUM.
 			 */
 			~bignum_handle() noexcept {
-				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
+				if (m_bn != nullptr) BN_free(m_bn);
 			}
 
 			/**
@@ -554,7 +554,7 @@ namespace jwt {
 			 * \throws std::runtime_error if BIGNUM duplication fails
 			 */
 			bignum_handle& operator=(const bignum_handle& other) {
-				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
+				if (m_bn != nullptr) BN_free(m_bn);
 				if (other.m_bn == nullptr) throw std::runtime_error("BIGNUM is null");
 				m_bn = BN_dup(other.m_bn);
 				if (m_bn == nullptr) throw std::runtime_error("BN_dup failed");
@@ -565,7 +565,7 @@ namespace jwt {
 			 * \brief Move assignment. Steals ownership from other.
 			 */
 			bignum_handle& operator=(bignum_handle&& other) noexcept {
-				if (m_bn != nullptr) BN_free(const_cast<BIGNUM*>(m_bn));
+				if (m_bn != nullptr) BN_free(m_bn);
 				m_bn = other.m_bn;
 				other.m_bn = nullptr;
 				return *this;
@@ -574,13 +574,13 @@ namespace jwt {
 			/**
 			 * \brief Get the underlying BIGNUM pointer.
 			 */
-			const BIGNUM* get() const noexcept { return m_bn; }
+			BIGNUM* get() const noexcept { return m_bn; }
 
 			/**
 			 * \brief Take ownership of the underlying BIGNUM pointer.
 			 */
-			const BIGNUM* release() noexcept {
-				const BIGNUM* temp = m_bn;
+			BIGNUM* release() noexcept {
+				BIGNUM* temp = m_bn;
 				m_bn = nullptr;
 				return temp;
 			}
@@ -596,7 +596,7 @@ namespace jwt {
 			explicit operator bool() const noexcept { return m_bn != nullptr; }
 
 		private:
-			const BIGNUM* m_bn{nullptr};
+			BIGNUM* m_bn{nullptr};
 		};
 
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {

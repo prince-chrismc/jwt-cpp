@@ -36,7 +36,7 @@ TEST(BignumHandleTest, ConstructorMakesCopy) {
 
 TEST(BignumHandleTest, CopyConstructor) {
 	jwt::helper::bignum_handle bn1;
-	BN_set_word(const_cast<BIGNUM*>(bn1.get()), 123);
+	BN_set_word(bn1.get(), 123);
 
 	jwt::helper::bignum_handle bn2(bn1);
 
@@ -47,10 +47,10 @@ TEST(BignumHandleTest, CopyConstructor) {
 
 TEST(BignumHandleTest, CopiesAreIndependent) {
 	jwt::helper::bignum_handle bn1;
-	BN_set_word(const_cast<BIGNUM*>(bn1.get()), 50);
+	BN_set_word(bn1.get(), 50);
 
 	jwt::helper::bignum_handle bn2(bn1);
-	BN_set_word(const_cast<BIGNUM*>(bn2.get()), 100);
+	BN_set_word(bn2.get(), 100);
 
 	EXPECT_EQ(50, BN_get_word(bn1.get()));
 	EXPECT_EQ(100, BN_get_word(bn2.get()));
@@ -58,7 +58,7 @@ TEST(BignumHandleTest, CopiesAreIndependent) {
 
 TEST(BignumHandleTest, MoveConstructor) {
 	jwt::helper::bignum_handle bn1;
-	BN_set_word(const_cast<BIGNUM*>(bn1.get()), 999);
+	BN_set_word(bn1.get(), 999);
 	const BIGNUM* original_ptr = bn1.get();
 
 	jwt::helper::bignum_handle bn2(std::move(bn1));
@@ -98,7 +98,7 @@ TEST(BignumHandleTest, OperatorBool) {
 TEST(BignumHandleTest, AssignmentDisabled) {
 	std::vector<jwt::helper::bignum_handle> vec;
 	jwt::helper::bignum_handle bn1;
-	BN_set_word(const_cast<BIGNUM*>(bn1.get()), 10);
+	BN_set_word(bn1.get(), 10);
 	vec.push_back(std::move(bn1));
 
 	ASSERT_EQ(1, vec.size());
@@ -147,7 +147,7 @@ TEST(BignumHandleTest, RAIIWithExceptions) {
 
 	try {
 		jwt::helper::bignum_handle bn;
-		BN_set_word(const_cast<BIGNUM*>(bn.get()), 456);
+		BN_set_word(bn.get(), 456);
 		throw std::runtime_error("Test exception");
 		cleanup_count++;
 	} catch (const std::runtime_error&) { cleanup_count++; }
