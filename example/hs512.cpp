@@ -8,7 +8,7 @@ BIGNUM* make_bn();
 
 int main() {
 	/* [use HMAC algo with BIGNUM] */
-	const BIGNUM* cipher = make_bn();
+	BIGNUM* cipher = make_bn();
 	auto token = jwt::create()
 					 .set_issuer("auth0")
 					 .set_type("JWT")
@@ -31,6 +31,8 @@ int main() {
 		std::cout << e.first << " = " << e.second << std::endl;
 	for (auto& e : decoded.get_payload_json())
 		std::cout << e.first << " = " << e.second << std::endl;
+
+	BN_free(cipher);
 }
 
 BIGNUM* make_bn() {

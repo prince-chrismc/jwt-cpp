@@ -75,6 +75,7 @@ TYPED_TEST(TokenTest, CreateTokenHS256Bytes) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::hs256{cipher});
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.iXeab-Ef-S-JlVH5zxpqR4BIrz7DiUNH-0EljbYaf68",
 			  token);
+	BN_free(cipher);
 }
 
 TYPED_TEST(TokenTest, CreateTokenRS256) {
@@ -544,6 +545,8 @@ TYPED_TEST(TokenTest, VerifyTokenHS256Bytes) {
 
 	auto decoded_token = jwt::decode(token);
 	verify.verify(decoded_token);
+
+	BN_free(cipher);
 }
 
 TYPED_TEST(TokenTest, VerifyTokenHS256Fail) {
