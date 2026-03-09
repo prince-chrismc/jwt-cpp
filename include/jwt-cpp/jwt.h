@@ -965,6 +965,7 @@ namespace jwt {
 				ec = error::rsa_error::set_rsa_failed;
 				return bignum_handle(nullptr);
 			}
+			BN_free(bn); // Free the BIGNUM allocated by BN_bin2bn, as bignum_handle will create its own copy
 			return bignum_handle(bn);
 		}
 		/**
