@@ -66,6 +66,18 @@ TYPED_TEST(TokenTest, CreateTokenHS256) {
 			  token);
 }
 
+TYPED_TEST(TokenTest, CreateTokenHS256Bytes) {
+	// https://stackoverflow.com/a/70790564
+	const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
+	BIGNUM* cipher = nullptr;
+	ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
+	ASSERT_NE(nullptr, cipher);
+	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::hs256{cipher});
+	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.iXeab-Ef-S-JlVH5zxpqR4BIrz7DiUNH-0EljbYaf68",
+			  token);
+	BN_free(cipher);
+}
+
 TYPED_TEST(TokenTest, CreateTokenRS256) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", ""));
@@ -519,6 +531,22 @@ TYPED_TEST(TokenTest, VerifyTokenHS256) {
 
 	auto decoded_token = jwt::decode(token);
 	verify.verify(decoded_token);
+}
+
+TYPED_TEST(TokenTest, VerifyTokenHS256Bytes) {
+	std::string token =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.iXeab-Ef-S-JlVH5zxpqR4BIrz7DiUNH-0EljbYaf68";
+
+	const char bytes[] = "1234567891234578912345678912345678912345678912345789123456789123456789";
+	BIGNUM* cipher = nullptr;
+	ASSERT_NE(0, BN_dec2bn(&cipher, bytes));
+	ASSERT_NE(nullptr, cipher);
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{cipher}).with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+	verify.verify(decoded_token);
+
+	BN_free(cipher);
 }
 
 TYPED_TEST(TokenTest, VerifyTokenHS256Fail) {

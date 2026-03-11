@@ -1249,7 +1249,7 @@ TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 			{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
 			{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
 			{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
-#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX < 0x05007000
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX < 0x05006000
 			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
 #else
 			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signfinal_failed},
