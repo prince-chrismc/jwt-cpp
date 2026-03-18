@@ -18,7 +18,7 @@ namespace jwt {
 			using value_type = json::value;
 			using object_type = json::object;
 			using array_type = json::array;
-			using string_type = std::string;
+			using string_type = json::string;
 			using number_type = double;
 			using integer_type = std::int64_t;
 			using boolean_type = bool;

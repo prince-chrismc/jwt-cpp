@@ -39,32 +39,32 @@ TEST(BaseTest, Base64URLIndex) {
 
 TEST(BaseTest, BaseDetailsCountPadding) {
 	using jwt::base::details::padding;
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC~~~", {"~"}));
-	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding("ABC~~~~~", {"~"}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("ABC", {"~"}));
+	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding<std::string>("ABC~~~", {"~"}));
+	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding<std::string>("ABC~~~~~", {"~"}));
 
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC!", {"~", "!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
-	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "!"}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("ABC", {"~", "!"}));
+	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding<std::string>("ABC!", {"~", "!"}));
+	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding<std::string>("ABC~", {"~", "!"}));
+	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding<std::string>("ABC~~!", {"~", "!"}));
+	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding<std::string>("ABC!~~", {"~", "!"}));
+	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding<std::string>("ABC~~!~~", {"~", "!"}));
 
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3d", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3D", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding<std::string>("MTIzNA%3d%3d", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding<std::string>("MTIzNA%3d%3D", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding<std::string>("MTIzNA%3D%3d", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding<std::string>("MTIzNA%3D%3D", {"%3d", "%3D"}));
 
 	// Some fake scenarios
 
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("", {"~"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "~~!"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC!", {"~", "~~!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "~~!"}));
-	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "~~!"}));
-	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC!~~", {"~", "~~!"}));
-	ASSERT_EQ((padding{3, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "~~!"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC~~!~~", {}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("", {"~"}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("ABC", {"~", "~~!"}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("ABC!", {"~", "~~!"}));
+	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding<std::string>("ABC~", {"~", "~~!"}));
+	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding<std::string>("ABC~~!", {"~", "~~!"}));
+	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding<std::string>("ABC!~~", {"~", "~~!"}));
+	ASSERT_EQ((padding{3, 5}), jwt::base::details::count_padding<std::string>("ABC~~!~~", {"~", "~~!"}));
+	ASSERT_EQ(padding{}, jwt::base::details::count_padding<std::string>("ABC~~!~~", {}));
 }
 
 TEST(BaseTest, Base64Decode) {
