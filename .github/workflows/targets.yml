@@ -98,7 +98,7 @@ gentoo:
       - name: install dependencies
         run: |
           emerge --sync
-          emerge -v sys-devel/gcc dev-libs/openssl sys-devel/make dev-libs/picojson
+          emerge -v sys-devel/gcc dev-libs/openssl sys-devel/make dev-cpp/picojson
       - uses: actions/checkout@v4
       - uses: ./.github/actions/install/cmake
         with:
