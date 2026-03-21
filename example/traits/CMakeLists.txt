@@ -23,10 +23,10 @@ if(TARGET nlohmann_json::nlohmann_json)
   target_link_libraries(nlohmann-json nlohmann_json::nlohmann_json jwt-cpp::jwt-cpp)
 endif()
 
-include("../../cmake/private-find-kazuho-picojson.cmake")
-if(TARGET kazuho_picojson)
+find_package(picojson)
+if(TARGET picojson::picojson)
   add_executable(kazuho-picojson kazuho-picojson.cpp)
-  target_link_libraries(kazuho-picojson jwt-cpp::jwt-cpp kazuho_picojson)
+  target_link_libraries(kazuho-picojson jwt-cpp::jwt-cpp picojson::picojson)
 endif()
 
 find_package(jsoncpp CONFIG)

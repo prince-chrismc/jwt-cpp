@@ -71,7 +71,7 @@ elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
-  find_package(picojson 1.3.0 REQUIRED)
+  find_package(picojson REQUIRED)
 endif()
 
 if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)

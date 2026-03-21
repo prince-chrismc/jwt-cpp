@@ -106,12 +106,7 @@ jobs:
           cache-key-extra: ${{ matrix.image }}
 
       - name: setup
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_DISABLE_PICOJSON:BOOL=ON
-          cmake --build .
-          cmake --install .
+        run: cmake --workflow --preset ci-external-picojson
 
       - name: test
         working-directory: tests/cmake

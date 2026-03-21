@@ -62,6 +62,24 @@
             }
         },
         {
+            "name": "ci-external-picojson",
+            "inherits": ["debug"],
+            "displayName": "External picojson",
+            "description": "This is only used in CI to test with an external picojson installation",
+            "cacheVariables": {
+                "JWT_EXTERNAL_PICOJSON": "ON"
+            }
+        },
+        {
+            "name": "ci-internal-picojson",
+            "inherits": ["debug"],
+            "displayName": "Internal picojson",
+            "description": "This is only used in CI to test with the internal picojson implementation",
+            "cacheVariables": {
+                "JWT_EXTERNAL_PICOJSON": "OFF"
+            }
+        },
+        {
             "name": "ci-fuzzing",
             "inherits": ["debug", "linux"],
             "displayName": "Fuzz Testing",
@@ -144,6 +162,22 @@
             ]
         },
         {
+            "name": "ci-external-picojson",
+            "configurePreset": "ci-external-picojson",
+            "configuration": "Debug",
+            "targets": [
+                "install"
+            ]
+        },
+        {
+            "name": "ci-internal-picojson",
+            "configurePreset": "ci-internal-picojson",
+            "configuration": "Debug",
+            "targets": [
+                "install"
+            ]
+        },
+        {
             "name": "ci-fuzzing",
             "configurePreset": "ci-fuzzing",
             "targets": [
@@ -181,6 +215,15 @@
             "execution": {
                 "noTestsAction": "error"
             }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "ci-external-picojson",
+            "steps": [
+                { "type": "configure", "name": "ci-external-picojson" },
+                { "type": "build",     "name": "ci-external-picojson" }
+            ]
         }
     ]
 }
