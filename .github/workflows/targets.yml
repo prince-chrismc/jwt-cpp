@@ -84,3 +84,38 @@ jobs:
         run: |
           CC=gcc-12 CXX=g++-12 cmake . -DCMAKE_CXX_STANDARD=20 -DTEST:STRING="defaults-enabled"
           cmake --build .
+
+
+gentoo:
+    name: Gentoo Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [gentoo/portage:20260321]
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: install dependencies
+        run: |
+          emerge --sync
+          emerge -v sys-devel/gcc dev-libs/openssl sys-devel/make dev-libs/picojson
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.26.3"
+          url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
+          cache-key-extra: ${{ matrix.image }}
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_DISABLE_PICOJSON:BOOL=ON
+          cmake --build .
+          cmake --install .
+
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .

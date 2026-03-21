@@ -21,7 +21,7 @@ option(JWT_BUILD_DOCS "Adds a target for building the doxygen documentation" OFF
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
 
-option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
+option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialize" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(
