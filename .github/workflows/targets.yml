@@ -90,20 +90,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [gentoo/portage:20260321]
+        image: [gentoo/stage3:20260321-amd64] # 2024.3
     container:
       image: ${{ matrix.image }}
+      options: --user root
     steps:
       - name: install dependencies
+        env:
+          # Disable sandboxing which often fails in non-privileged Docker
+          FEATURES: "-sandbox -usersandbox -ipc-sandbox -pid-sandbox"
         run: |
-          emerge --sync
-          emerge -v sys-devel/gcc dev-libs/openssl sys-devel/make dev-cpp/picojson
+          emerge-webrsync
+          emerge -v --jobs 5 sys-devel/gcc dev-libs/openssl sys-devel/make dev-build/cmake dev-cpp/picojson
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/install/cmake
-        with:
-          version: "3.26.3"
-          url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
-          cache-key-extra: ${{ matrix.image }}
 
       - name: setup
         run: cmake --workflow --preset ci-external-picojson
