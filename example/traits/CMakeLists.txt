@@ -23,6 +23,10 @@ if(TARGET nlohmann_json::nlohmann_json)
   target_link_libraries(nlohmann-json nlohmann_json::nlohmann_json jwt-cpp::jwt-cpp)
 endif()
 
+if(PROJECT_IS_TOP_LEVEL)
+  # Access Findpicojson.cmake from the main project's cmake directory
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
+endif()
 find_package(picojson)
 if(TARGET picojson::picojson)
   add_executable(kazuho-picojson kazuho-picojson.cpp)
