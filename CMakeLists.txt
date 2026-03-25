@@ -106,6 +106,11 @@ if(JWT_DISABLE_BASE64)
 endif()
 if(JWT_DISABLE_PICOJSON)
   target_compile_definitions(jwt-cpp INTERFACE JWT_DISABLE_PICOJSON)
+else()
+  if(NOT JWT_EXTERNAL_PICOJSON)
+    target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}/picojson>
+                                                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  endif()
 endif()
 
 include(GNUInstallDirs)
@@ -151,7 +156,7 @@ install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 install(DIRECTORY ${JWT_INCLUDE_PATH}/jwt-cpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
-  install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/picojson)
+  install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
