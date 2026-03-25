@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [gentoo/stage3:20260321-amd64] # 2024.3
+        image: [gentoo/stage3:20260323]
     container:
       image: ${{ matrix.image }}
       options: --user root
