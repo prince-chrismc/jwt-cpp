@@ -101,7 +101,7 @@ jobs:
           FEATURES: "-sandbox -usersandbox -ipc-sandbox -pid-sandbox"
         run: |
           emerge-webrsync
-          emerge -v --jobs 5 sys-devel/gcc dev-libs/openssl sys-devel/make dev-build/cmake dev-cpp/picojson
+          emerge -v --jobs 5 sys-devel/gcc dev-libs/openssl dev-build/make dev-build/cmake dev-cpp/picojson
       - uses: actions/checkout@v4
 
       - name: setup
