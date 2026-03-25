@@ -21,7 +21,7 @@ option(JWT_BUILD_DOCS "Adds a target for building the doxygen documentation" OFF
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
 
-option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
+option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialize" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(
@@ -71,7 +71,7 @@ elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
-  find_package(picojson 1.3.0 REQUIRED)
+  find_package(picojson REQUIRED)
 endif()
 
 if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
@@ -106,6 +106,11 @@ if(JWT_DISABLE_BASE64)
 endif()
 if(JWT_DISABLE_PICOJSON)
   target_compile_definitions(jwt-cpp INTERFACE JWT_DISABLE_PICOJSON)
+else()
+  if(NOT JWT_EXTERNAL_PICOJSON)
+    target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}/picojson>
+                                                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  endif()
 endif()
 
 include(GNUInstallDirs)
@@ -151,7 +156,7 @@ install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 install(DIRECTORY ${JWT_INCLUDE_PATH}/jwt-cpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
-  install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/picojson)
+  install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})

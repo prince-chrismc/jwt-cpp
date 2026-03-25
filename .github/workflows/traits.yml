@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF ${{ matrix.target.name == 'kazuho-picojson' && '-DJWT_DISABLE_PICOJSON:BOOL=ON' || '' }}
           sudo cmake --install .
 
       # Install the JSON library

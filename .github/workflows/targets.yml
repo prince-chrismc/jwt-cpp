@@ -84,3 +84,31 @@ jobs:
         run: |
           CC=gcc-12 CXX=g++-12 cmake . -DCMAKE_CXX_STANDARD=20 -DTEST:STRING="defaults-enabled"
           cmake --build .
+
+  gentoo:
+    name: Gentoo Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [gentoo/stage3:20260323]
+    container:
+      image: ${{ matrix.image }}
+      options: --user root
+    steps:
+      - name: install dependencies
+        env:
+          # Disable sandboxing which often fails in non-privileged Docker
+          FEATURES: "-sandbox -usersandbox -ipc-sandbox -pid-sandbox"
+        run: |
+          emerge-webrsync
+          emerge -v --jobs 5 sys-devel/gcc dev-libs/openssl dev-build/make dev-build/cmake dev-cpp/picojson
+      - uses: actions/checkout@v4
+
+      - name: setup
+        run: cmake --workflow --preset ci-external-picojson
+
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .

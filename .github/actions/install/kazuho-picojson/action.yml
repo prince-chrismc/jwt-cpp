@@ -8,10 +8,5 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        cd /tmp
-        wget https://github.com/kazuho/picojson/archive/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
-        cd picojson-${{ inputs.version }}
-        sudo cp -v picojson.h /usr/local/include/picojson
+    - run: ${{ github.action_path }}/install-picojson.sh ${{ inputs.version }}
       shell: bash
