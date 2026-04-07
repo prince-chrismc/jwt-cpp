@@ -192,7 +192,8 @@ namespace jwt {
 
 					if (base.size() < fill_struct.size()) continue;
 					// Does the end of the input exactly match the fill pattern?
-					if (base.substr(base.size() - fill_struct.size()) == fill_struct.value) {
+					const auto fill_value = string_type{fill_struct.value};
+					if (base.substr(base.size() - fill_struct.size()) == fill_value) {
 						return padding{1, fill_struct.size()} +
 							   count_padding(base.substr(0, base.size() - fill_struct.size()), fills);
 					}

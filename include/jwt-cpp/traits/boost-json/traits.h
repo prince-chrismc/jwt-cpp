@@ -18,10 +18,93 @@ namespace jwt {
 			using value_type = json::value;
 			using object_type = json::object;
 			using array_type = json::array;
-			using string_type = json::string;
 			using number_type = double;
 			using integer_type = std::int64_t;
 			using boolean_type = bool;
+
+			class string_type : public json::string {
+			public:
+				// Inherit constructors (crucial for generic code)
+				using json::string::string;
+				
+				// Copy/Move from the base class
+				string_type(json::string&& other) : json::string(std::move(other)) {}
+				string_type(const json::string& other) : json::string(other) {}
+
+				// 3. ADDED: Construct from std::string or std::string_view
+				// This allows: json_string_wrapper my_str = std_str;
+				string_type(std::string_view s, json::storage_ptr sp = {}) 
+					: json::string(s.data(), s.size(), std::move(sp)) {}
+
+                // Map 'append' to Boost's 'insert'
+                string_type& append(std::string_view s) {
+                    this->insert(this->size(), s);
+                    return *this;
+                }
+
+				// Overload for specific ranges if needed
+				string_type& append(const char* s, size_t n) {
+					this->insert(this->size(), {s, n});
+					return *this;
+				}
+
+				// Now operator+= can safely use append or just the base +=
+				string_type& operator+=(std::string_view s) {
+					return this->append(s);
+				}
+
+				// Add the missing substr implementation
+				// Returns a new string (matches std::string behavior)
+				string_type substr(size_t pos = 0, size_t count = npos) const {
+					auto view = this->subview(pos, count);
+					return string_type(view.data(), view.size(), this->get_allocator());
+				}
+
+				string_type& operator=(std::string_view s) {
+					this->assign(s.data(), s.size());
+					return *this;
+				}
+
+				// Explicitly handle std::string if needed (though string_view covers it)
+				string_type& operator=(const std::string& s) {
+					this->assign(s.data(), s.size());
+					return *this;
+				}
+
+				// Keep your existing boost::json assignment
+				string_type& operator=(const boost::json::string& other) {
+					boost::json::string::operator=(other);
+					return *this;
+				}
+
+				// Comparison with const char* (C-strings)
+				bool operator==(const char* s) const noexcept {
+					return static_cast<const json::string&>(*this) == s;
+				}
+
+				// Comparison with other json::strings or wrappers
+				bool operator==(const json::string& other) const noexcept {
+					return static_cast<const json::string&>(*this) == other;
+				}
+			};
+
+            // --- Operators MUST be inside namespace jwt::traits ---
+            // These allow the trait checks in jwt.h to pass via ADL
+            friend string_type operator+(string_type lhs, std::string_view rhs) {
+                lhs.append(rhs);
+                return lhs;
+            }
+
+            friend string_type operator+(std::string_view lhs, const string_type& rhs) {
+                string_type res(lhs, rhs.get_allocator());
+                res.append(rhs);
+                return res;
+            }
+
+            friend string_type operator+(string_type lhs, const string_type& rhs) {
+                lhs.append(rhs);
+                return lhs;
+            }
 
 			static jwt::json::type get_type(const value_type& val) {
 				using jwt::json::type;
@@ -78,7 +161,28 @@ namespace jwt {
 
 			static std::string serialize(const value_type& val) { return json::serialize(val); }
 		};
+
+		
+
 	} // namespace traits
 } // namespace jwt
+
+namespace std {
+    inline jwt::traits::boost_json::string_type operator+(
+        jwt::traits::boost_json::string_type lhs, 
+        const jwt::traits::boost_json::string_type& rhs) 
+    {
+        lhs.append(rhs);
+        return lhs;
+    }
+
+    inline jwt::traits::boost_json::string_type operator+(
+        jwt::traits::boost_json::string_type lhs, 
+        std::string_view rhs) 
+    {
+        lhs.append(rhs);
+        return lhs;
+    }
+}
 
 #endif // JWT_CPP_BOOSTJSON_TRAITS_H
