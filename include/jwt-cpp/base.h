@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #ifdef __has_cpp_attribute
@@ -19,6 +20,25 @@
 #endif
 
 namespace jwt {
+	namespace details {
+		template<typename string_type, typename = void>
+		struct is_narrow_string : std::false_type {};
+
+		template<typename string_type>
+		struct is_narrow_string<
+			string_type, typename std::enable_if<std::is_same<typename string_type::value_type, char>::value>::type>
+			: std::true_type {};
+
+		template<typename string_type, typename = void>
+		struct has_size_string : std::false_type {};
+
+		template<typename string_type>
+		struct has_size_string<
+			string_type,
+			typename std::enable_if<std::is_integral<decltype(std::declval<const string_type>().size())>::value>::type>
+			: std::true_type {};
+	} // namespace details
+
 	/**
 	 * \brief character maps when encoding and decoding
 	 */
@@ -54,10 +74,7 @@ namespace jwt {
 				}};
 				return rdata;
 			}
-			static const std::string& fill() {
-				static const std::string fill{"="};
-				return fill;
-			}
+			static constexpr const char* fill() { return "="; }
 		};
 		/**
 		 * \brief valid list of character when working with [Base64URL](https://tools.ietf.org/html/rfc4648#section-5)
@@ -93,10 +110,7 @@ namespace jwt {
 				}};
 				return rdata;
 			}
-			static const std::string& fill() {
-				static const std::string fill{"%3d"};
-				return fill;
-			}
+			static constexpr const char* fill() { return "%3d"; }
 		};
 		namespace helper {
 			/**
@@ -130,9 +144,9 @@ namespace jwt {
 					}};
 					return rdata;
 				}
-				static const std::vector<std::string>& fill() {
-					static const std::vector<std::string> fill{"%3D", "%3d"};
-					return fill;
+				static const std::vector<const char*>& fill() {
+					static const std::vector<const char*> fill_values{"%3D", "%3d"};
+					return fill_values;
 				}
 			};
 		} // namespace helper
@@ -149,6 +163,13 @@ namespace jwt {
 	 */
 	namespace base {
 		namespace details {
+			struct fill {
+				const char* const value;
+				size_t length;
+
+				size_t size() const { return length; }
+			};
+
 			struct padding {
 				size_t count = 0;
 				size_t length = 0;
@@ -163,23 +184,29 @@ namespace jwt {
 				}
 			};
 
-			inline padding count_padding(const std::string& base, const std::vector<std::string>& fills) {
-				for (const auto& fill : fills) {
-					if (base.size() < fill.size()) continue;
+			template<typename string_type,
+					 typename = typename std::enable_if<jwt::details::has_size_string<string_type>::value>::type>
+			padding count_padding(const string_type& base, const std::vector<const char*>& fills) {
+				for (const auto& filler : fills) {
+					fill fill_struct{filler, std::strlen(filler)};
+
+					if (base.size() < fill_struct.size()) continue;
 					// Does the end of the input exactly match the fill pattern?
-					if (base.substr(base.size() - fill.size()) == fill) {
-						return padding{1, fill.length()} +
-							   count_padding(base.substr(0, base.size() - fill.size()), fills);
+					const auto fill_value = string_type{fill_struct.value};
+					if (base.substr(base.size() - fill_struct.size()) == fill_value) {
+						return padding{1, fill_struct.size()} +
+							   count_padding(base.substr(0, base.size() - fill_struct.size()), fills);
 					}
 				}
 
 				return {};
 			}
 
-			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
-									  const std::string& fill) {
+			template<typename string_type,
+					 typename = typename std::enable_if<jwt::details::has_size_string<string_type>::value>::type>
+			string_type encode(const string_type& bin, const std::array<char, 64>& alphabet, const char* fill) {
 				size_t size = bin.size();
-				std::string res;
+				string_type res;
 
 				// clear incomplete bytes
 				size_t fast_size = size - size % 3;
@@ -225,16 +252,17 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
-									  const std::vector<std::string>& fill) {
-				const auto pad = count_padding(base, fill);
+			template<typename string_type>
+			string_type decode(const string_type& base, const std::array<int8_t, 256>& rdata,
+							   const std::vector<const char*>& fill_) {
+				const auto pad = count_padding(base, fill_);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
 				const size_t size = base.size() - pad.length;
 				if ((size + pad.count) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
 
 				size_t out_size = size / 4 * 3;
-				std::string res;
+				string_type res;
 				res.reserve(out_size);
 
 				auto get_sextet = [&](size_t offset) { return alphabet::index(rdata, base[offset]); };
@@ -271,13 +299,14 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
-									  const std::string& fill) {
-				return decode(base, rdata, std::vector<std::string>{fill});
+			template<typename string_type>
+			string_type decode(const string_type& base, const std::array<int8_t, 256>& rdata, const char* fill) {
+				return decode<string_type>(base, rdata, std::vector<const char*>{fill});
 			}
 
-			inline std::string pad(const std::string& base, const std::string& fill) {
-				std::string padding;
+			template<typename string_type>
+			string_type pad(const string_type& base, const char* fill) {
+				string_type padding;
 				switch (base.size() % 4) {
 				case 1: padding += fill; JWT_FALLTHROUGH;
 				case 2: padding += fill; JWT_FALLTHROUGH;
@@ -285,10 +314,11 @@ namespace jwt {
 				default: break;
 				}
 
-				return base + padding;
+				return string_type(base + padding);
 			}
 
-			inline std::string trim(const std::string& base, const std::string& fill) {
+			template<typename string_type>
+			string_type trim(const string_type& base, const char* fill) {
 				auto pos = base.find(fill);
 				return base.substr(0, pos);
 			}
@@ -304,9 +334,10 @@ namespace jwt {
 		 * const auto b64 = jwt::base::encode<jwt::alphabet::base64>("example_data")
 		 * \endcode
 		 */
-		template<typename T>
-		std::string encode(const std::string& bin) {
-			return details::encode(bin, T::data(), T::fill());
+		template<typename alphabet, typename string_type = std::string>
+		typename std::enable_if<jwt::details::is_narrow_string<string_type>::value, string_type>::type
+		encode(const string_type& bin) {
+			return details::encode<string_type>(bin, alphabet::data(), alphabet::fill());
 		}
 		/**
 		 * \brief Generic base64 decoding
@@ -318,9 +349,10 @@ namespace jwt {
 		 * const auto b64 = jwt::base::decode<jwt::alphabet::base64>("ZXhhbXBsZV9kYXRh")
 		 * \endcode
 		 */
-		template<typename T>
-		std::string decode(const std::string& base) {
-			return details::decode(base, T::rdata(), T::fill());
+		template<typename alphabet, typename string_type = std::string>
+		typename std::enable_if<jwt::details::is_narrow_string<string_type>::value, string_type>::type
+		decode(const string_type& base) {
+			return details::decode<string_type>(base, alphabet::rdata(), alphabet::fill());
 		}
 		/**
 		 * \brief Generic base64 padding
@@ -332,9 +364,10 @@ namespace jwt {
 		 * const auto b64 = jwt::base::pad<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ")
 		 * \endcode
 		 */
-		template<typename T>
-		std::string pad(const std::string& base) {
-			return details::pad(base, T::fill());
+		template<typename alphabet, typename string_type = std::string>
+		typename std::enable_if<jwt::details::is_narrow_string<string_type>::value, string_type>::type
+		pad(const string_type& base) {
+			return details::pad<string_type>(base, alphabet::fill());
 		}
 		/**
 		 * \brief Generic base64 trimming
@@ -346,9 +379,10 @@ namespace jwt {
 		 * const auto b64 = jwt::base::trim<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ==")
 		 * \endcode
 		 */
-		template<typename T>
-		std::string trim(const std::string& base) {
-			return details::trim(base, T::fill());
+		template<typename alphabet, typename string_type = std::string>
+		typename std::enable_if<jwt::details::is_narrow_string<string_type>::value, string_type>::type
+		trim(const string_type& base) {
+			return details::trim<string_type>(base, alphabet::fill());
 		}
 	} // namespace base
 } // namespace jwt
