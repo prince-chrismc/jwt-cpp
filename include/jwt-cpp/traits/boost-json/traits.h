@@ -5,7 +5,6 @@
 #include "jwt-cpp/jwt.h"
 
 #include <boost/json.hpp>
-// if not boost JSON standalone then error...
 
 namespace jwt {
 	/**
@@ -88,19 +87,6 @@ namespace jwt {
 				}
 			};
 
-            // --- Operators MUST be inside namespace jwt::traits ---
-            // These allow the trait checks in jwt.h to pass via ADL
-            friend string_type operator+(string_type lhs, std::string_view rhs) {
-                lhs.append(rhs);
-                return lhs;
-            }
-
-            friend string_type operator+(std::string_view lhs, const string_type& rhs) {
-                string_type res(lhs, rhs.get_allocator());
-                res.append(rhs);
-                return res;
-            }
-
             friend string_type operator+(string_type lhs, const string_type& rhs) {
                 lhs.append(rhs);
                 return lhs;
@@ -171,14 +157,6 @@ namespace std {
     inline jwt::traits::boost_json::string_type operator+(
         jwt::traits::boost_json::string_type lhs, 
         const jwt::traits::boost_json::string_type& rhs) 
-    {
-        lhs.append(rhs);
-        return lhs;
-    }
-
-    inline jwt::traits::boost_json::string_type operator+(
-        jwt::traits::boost_json::string_type lhs, 
-        std::string_view rhs) 
     {
         lhs.append(rhs);
         return lhs;
