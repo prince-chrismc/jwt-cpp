@@ -3035,9 +3035,9 @@ namespace jwt {
 		 * \throw std::invalid_argument Token is not in correct format
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
-		JWT_CLAIM_EXPLICIT decoded_jwt(const typename json_traits::string_type& token)
-			: decoded_jwt(token, [](const typename json_traits::string_type& str) {
-				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+		JWT_CLAIM_EXPLICIT decoded_jwt(const std::string& token)
+			: decoded_jwt(token, [](const std::string& str) {
+				  return base::decode<alphabet::base64url, std::string>(base::pad<alphabet::base64url, std::string>(str));
 			  }) {}
 #endif
 		/**
@@ -3052,14 +3052,14 @@ namespace jwt {
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
 		template<typename Decode>
-		decoded_jwt(const typename json_traits::string_type& token, Decode decode) : token(token) {
+		decoded_jwt(const typename std::string& token, Decode decode) : token(token) {
 			auto hdr_end = token.find('.');
-			if (hdr_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
+			if (hdr_end == std::string::npos) throw std::invalid_argument("invalid token supplied");
 			auto payload_end = token.find('.', hdr_end + 1);
-			if (payload_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
-			header_base64 = token.substr(0, hdr_end);
-			payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
-			signature_base64 = token.substr(payload_end + 1);
+			if (payload_end == std::string::npos) throw std::invalid_argument("invalid token supplied");
+			auto header_base64 = token.substr(0, hdr_end);
+			auto payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
+			auto signature_base64 = token.substr(payload_end + 1);
 
 			header = decode(header_base64);
 			payload = decode(payload_base64);
@@ -3315,7 +3315,7 @@ namespace jwt {
 		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
 		 */
 		template<typename Algo, typename Encode>
-		typename json_traits::string_type sign(const Algo& algo, Encode encode) const {
+		typename std::string sign(const Algo& algo, Encode encode) const {
 			std::error_code ec;
 			auto res = sign(algo, encode, ec);
 			error::throw_if_error(ec);
@@ -3331,7 +3331,7 @@ namespace jwt {
 		 * \return Final token as a string
 		 */
 		template<typename Algo>
-		typename json_traits::string_type sign(const Algo& algo) const {
+		typename std::string sign(const Algo& algo) const {
 			std::error_code ec;
 			auto res = sign(algo, ec);
 			error::throw_if_error(ec);
@@ -3352,7 +3352,7 @@ namespace jwt {
 		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
 		 */
 		template<typename Algo, typename Encode>
-		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
+		typename std::string sign(const Algo& algo, Encode encode, std::error_code& ec) const {
 			// make a copy such that a builder can be re-used
 			typename json_traits::object_type obj_header = header_claims;
 			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
@@ -3377,11 +3377,11 @@ namespace jwt {
 		 * \return Final token as a string
 		 */
 		template<typename Algo>
-		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
+		std::string sign(const Algo& algo, std::error_code& ec) const {
 			return sign(
 				algo,
-				[](const typename json_traits::string_type& data) {
-					return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+				[](const std::string& data) {
+					return base::trim<alphabet::base64url, std::string>(base::encode<alphabet::base64url, std::string>(data));
 				},
 				ec);
 		}
@@ -3630,13 +3630,13 @@ namespace jwt {
 	private:
 		struct algo_base {
 			virtual ~algo_base() = default;
-			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
+			virtual void verify(const typename json_traits::string_type& data, const typename json_traits::string_type& sig, std::error_code& ec) = 0;
 		};
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
 			explicit algo(T a) : alg(a) {}
-			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
+			void verify(const typename json_traits::string_type& data, const typename json_traits::string_type& sig, std::error_code& ec) override {
 				alg.verify(data, sig, ec);
 			}
 		};
@@ -3647,7 +3647,7 @@ namespace jwt {
 		/// Instance of clock type
 		Clock clock;
 		/// Supported algorithms
-		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
+		std::unordered_map<typename json_traits::string_type, std::shared_ptr<algo_base>> algs;
 
 	public:
 		/**
@@ -3849,7 +3849,7 @@ namespace jwt {
 			ec.clear();
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
-			const std::string algo = jwt.get_algorithm();
+			const typename json_traits::string_type algo = jwt.get_algorithm();
 			if (algs.count(algo) == 0) {
 				ec = error::token_verification_error::wrong_algorithm;
 				return;
@@ -4222,7 +4222,7 @@ namespace jwt {
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename json_traits, typename Decode>
-	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token, Decode decode) {
+	decoded_jwt<json_traits> decode(const std::string& token, Decode decode) {
 		return decoded_jwt<json_traits>(token, decode);
 	}
 
@@ -4237,7 +4237,7 @@ namespace jwt {
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename json_traits>
-	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token) {
+	decoded_jwt<json_traits> decode(const std::string& token) {
 		return decoded_jwt<json_traits>(token);
 	}
 	/**
